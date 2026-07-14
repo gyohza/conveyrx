@@ -50,6 +50,7 @@ export class PixiGameApp {
   private lastHoveredCell: GridPos | null = null;
   private resizingEdge: BaseEdge | null = null;
   private readonly backdrop = new Graphics();
+  private resizeObserver: ResizeObserver | null = null;
 
   private constructor(
     private readonly app: Application,
@@ -77,6 +78,11 @@ export class PixiGameApp {
     game.bindPointerEvents();
     app.ticker.add((ticker) => renderer.update(ticker.deltaMS));
     app.renderer.on('resize', () => game.layout());
+    game.resizeObserver = new ResizeObserver(() => {
+      app.resize();
+      game.layout();
+    });
+    game.resizeObserver.observe(host);
     game.layout();
     return game;
   }
@@ -143,6 +149,7 @@ export class PixiGameApp {
   }
 
   destroy(): void {
+    this.resizeObserver?.disconnect();
     this.app.destroy(true, { children: true });
   }
 
