@@ -1,5 +1,9 @@
 # ConveyRx
 
+[![Release](https://github.com/gyohza/conveyrx/actions/workflows/release.yml/badge.svg)](https://github.com/gyohza/conveyrx/actions/workflows/release.yml)
+[![Version](https://img.shields.io/github/package-json/v/gyohza/conveyrx)](https://github.com/gyohza/conveyrx/releases)
+[![Play](https://img.shields.io/badge/play-rx.gyohza.dev-38bdf8)](https://rx.gyohza.dev)
+
 A browser game about running an automated mineral-extraction rig on a carbon-rich asteroid, that teaches
 [RxJS](https://rxjs.dev) by turning its operators into buildable machines. You place conveyors and
 operator-machines on a grid to wire a fixed **source** to a fixed **sell** block; packets (events) flow through
@@ -135,6 +139,20 @@ math) using PixiJS's real `Graphics`/`Container`/`Sprite`/`Text` classes, which 
 long as nothing touches an actual GPU context. The one deliberate exception is `render/pixi-app.ts`: it calls
 `Application.init()`, which needs a real WebGL context and can't be meaningfully unit-tested in jsdom — it's
 verified by running the app in a real (headless) browser and watching it render instead.
+
+## Releases & deployment
+
+Versioning is fully automated by [semantic-release](https://semantic-release.gitbook.io/) (`release.config.js`),
+driven entirely by [Conventional Commits](https://www.conventionalcommits.org) on `main`: `fix` bumps a patch,
+`feat` bumps a minor, a `BREAKING CHANGE` footer (or `!` after the type) bumps a major — nothing is ever hand-edited
+in `package.json`. Every push to `main` runs `.github/workflows/release.yml`, which lints and tests, then lets
+semantic-release decide whether a release is warranted; if so it bumps the version, updates `CHANGELOG.md`, tags
+the commit, and publishes a GitHub Release, then builds and deploys to GitHub Pages at
+**[rx.gyohza.dev](https://rx.gyohza.dev)**.
+
+The project is intentionally pre-1.0 (`0.x.y`) — semver's own convention for "still unstable, anything may change"
+— so no separate `-beta` suffix is used; the in-app footer reads `package.json`'s version directly (via a JSON
+import, so it's always in sync with no manual step) and labels any `0.x` version "beta" automatically.
 
 ## Contributing
 
