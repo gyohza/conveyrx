@@ -61,7 +61,7 @@ export interface SourceEntity {
   position: GridPos;
   kind: SourceKind;
   sequence: MaterialId[];
-  /** Toggling this on resets cursor/ticksSinceLastSpawn, so of/from always replay from scratch. */
+  /** Toggling this off resets cursor/ticksSinceLastSpawn, so of/from always replay from scratch. */
   subscribed: boolean;
   cursor: number;
   ticksSinceLastSpawn: number;

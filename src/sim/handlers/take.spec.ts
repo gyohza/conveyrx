@@ -74,6 +74,20 @@ describe('takeHandler', () => {
     expect(events).toEqual([{ type: 'sourceUnsubscribed', sourceId: source.id }]);
   });
 
+  it('resets the source cursor when take completes and auto-unsubscribes it', () => {
+    const state = emptyState();
+    const source = addSource(state, { x: 0, y: 0 }, { subscribed: true });
+    source.cursor = 2;
+    addConveyor(state, { x: 1, y: 0 }, 'east');
+    const machine = addMachine(state, 'take', { x: 2, y: 0 }, 1);
+    const packet = addPacket(state, 'carbon');
+    machine.inputs[0].queue.push(packet.id);
+
+    takeHandler.step({ state, machine });
+
+    expect(source.cursor).toBe(0);
+  });
+
   it('blocks further packets once the count has already been reached', () => {
     const state = emptyState();
     const machine = addMachine(state, 'take', { x: 1, y: 0 }, 1);

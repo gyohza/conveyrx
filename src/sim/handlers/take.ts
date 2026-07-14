@@ -2,6 +2,7 @@ import { tryDeliverTo } from '../core/delivery';
 import type { SimEvent } from '../core/events';
 import { peekPort, tryPushToPort, tryTakeFromPort } from '../core/port';
 import { machinePorts, traceUpstreamSource } from '../core/routing';
+import { resetSequence } from '../core/subscription';
 import { translate } from '../core/types';
 import type { MachineHandler } from './registry';
 
@@ -41,6 +42,7 @@ export const takeHandler: MachineHandler = {
 
         if (machine.internal.passed >= machine.config.count && source && source.subscribed) {
           source.subscribed = false;
+          resetSequence(source);
           events.push({ type: 'sourceUnsubscribed', sourceId: source.id });
         }
       }

@@ -3,7 +3,7 @@ import type { SourceKind } from '../content/source-kinds';
 import type { SimState } from './state';
 import type { EntityId } from './types';
 
-function resetSequence(source: { cursor: number; ticksSinceLastSpawn: number }): void {
+export function resetSequence(source: { cursor: number; ticksSinceLastSpawn: number }): void {
   source.cursor = 0;
   source.ticksSinceLastSpawn = 0;
 }
@@ -12,7 +12,7 @@ export function toggleSubscribe(state: SimState, sourceId: EntityId): void {
   const source = state.sources[sourceId];
   if (!source) return;
   source.subscribed = !source.subscribed;
-  if (source.subscribed) resetSequence(source);
+  if (!source.subscribed) resetSequence(source);
 }
 
 export type SetSourceKindResult =

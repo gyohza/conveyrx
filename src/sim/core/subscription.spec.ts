@@ -15,9 +15,9 @@ describe('toggleSubscribe', () => {
     expect(source.subscribed).toBe(false);
   });
 
-  it('resets cursor and timers when transitioning to subscribed, so of/from always replay fresh', () => {
+  it('resets cursor and timers when transitioning to unsubscribed, so of/from always replay fresh', () => {
     const state = emptyState();
-    const source = addSource(state, { x: 0, y: 0 }, { subscribed: false });
+    const source = addSource(state, { x: 0, y: 0 }, { subscribed: true });
     source.cursor = 2;
     source.ticksSinceLastSpawn = 15;
 
@@ -27,9 +27,9 @@ describe('toggleSubscribe', () => {
     expect(source.ticksSinceLastSpawn).toBe(0);
   });
 
-  it('leaves in-progress counters untouched when transitioning to unsubscribed', () => {
+  it('leaves in-progress counters untouched when transitioning to subscribed', () => {
     const state = emptyState();
-    const source = addSource(state, { x: 0, y: 0 }, { subscribed: true });
+    const source = addSource(state, { x: 0, y: 0 }, { subscribed: false });
     source.cursor = 2;
 
     toggleSubscribe(state, source.id);
