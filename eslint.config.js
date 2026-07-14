@@ -37,6 +37,43 @@ module.exports = defineConfig([
     },
   },
   {
+    files: ['src/sim/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'rxjs',
+              importNames: ['interval', 'timer', 'animationFrames'],
+              message:
+                'sim/ must stay deterministic and framework-agnostic: no live timers inside the simulation core. Real time enters once, at the app/ boundary.',
+            },
+            { name: 'pixi.js', message: 'sim/ must not depend on the rendering layer.' },
+          ],
+          patterns: [
+            { group: ['**/render/*'], message: 'sim/ must not depend on the rendering layer.' },
+            { group: ['**/app/*'], message: 'sim/ must not depend on the Angular app layer.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/render/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { group: ['@angular/*'], message: 'render/ must not depend on Angular.' },
+            { group: ['**/app/*'], message: 'render/ must not depend on the Angular app layer.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [
       angular.configs.templateRecommended,
