@@ -52,6 +52,12 @@ function labelsIn(container: Container): string[] {
   return container.children.filter((c): c is Text => c instanceof Text).map((c) => c.text);
 }
 
+function textAt(container: Container, text: string): Text {
+  const found = container.children.find((c): c is Text => c instanceof Text && c.text === text);
+  if (!found) throw new Error(`no text "${text}" found`);
+  return found;
+}
+
 const SPAWN = {
   type: 'packetSpawned',
   packetId: 1,
@@ -161,6 +167,23 @@ describe('WorldRenderer', () => {
       const subscribedSprite = renderer.entityLayer.children[0];
 
       expect(subscribedSprite.tint).not.toBe(grayTint);
+    });
+
+    it('shows the remaining item count for a source, reflecting an in-progress cursor', () => {
+      const { renderer } = buildRenderer();
+      const state = emptyState();
+      addSource(
+        state,
+        { x: 0, y: 0 },
+        {
+          sequence: ['carbon', 'carbon', 'carbon'],
+          subscribed: true,
+        },
+      ).cursor = 1;
+
+      renderer.buildStatic(state);
+
+      expect(labelsIn(renderer.entityLayer)).toContain('2');
     });
 
     it('can rebuild after grid edits without duplicating content', () => {
@@ -374,6 +397,85 @@ describe('WorldRenderer', () => {
       const state = emptyState();
 
       expect(() => renderer.setSourceSubscribed(state, 999, true)).not.toThrow();
+    });
+
+    it('recomputes the source counter back to full once the source is unsubscribed', () => {
+      const { renderer } = buildRenderer();
+      const state = emptyState();
+      const source = addSource(
+        state,
+        { x: 0, y: 0 },
+        {
+          sequence: ['carbon', 'carbon', 'carbon'],
+          subscribed: true,
+        },
+      );
+      source.cursor = 2;
+      renderer.buildStatic(state);
+
+      toggleSubscribe(state, source.id);
+      renderer.setSourceSubscribed(state, source.id, false);
+
+      expect(labelsIn(renderer.entityLayer)).toContain('3');
+    });
+  });
+
+  describe('source counter', () => {
+    it('recomputes the remaining count when a packet spawns from the source', () => {
+      const { renderer } = buildRenderer();
+      const state = emptyState();
+      const source = addSource(
+        state,
+        { x: 0, y: 0 },
+        {
+          sequence: ['carbon', 'carbon', 'carbon'],
+          subscribed: true,
+        },
+      );
+      renderer.buildStatic(state);
+      source.cursor = 2;
+
+      renderer.applyEvents(state, [
+        { type: 'packetSpawned', packetId: 1, material: 'carbon', position: source.position },
+      ]);
+
+      expect(labelsIn(renderer.entityLayer)).toContain('1');
+    });
+
+    it('blinks the counter red once depleted, and shows it steady otherwise', () => {
+      const { renderer } = buildRenderer();
+      const state = emptyState();
+      const source = addSource(
+        state,
+        { x: 0, y: 0 },
+        {
+          sequence: ['carbon'],
+          subscribed: true,
+        },
+      );
+      source.cursor = 1;
+      renderer.buildStatic(state);
+
+      const label = textAt(renderer.entityLayer, '0');
+      expect(label.visible).toBe(true);
+      const startVisible = label.visible;
+
+      renderer.update(500);
+      expect(label.visible).not.toBe(startVisible);
+      renderer.update(500);
+      expect(label.visible).toBe(startVisible);
+    });
+
+    it('leaves a non-empty counter fully visible across updates', () => {
+      const { renderer } = buildRenderer();
+      const state = emptyState();
+      addSource(state, { x: 0, y: 0 }, { sequence: ['carbon', 'carbon'], subscribed: true });
+      renderer.buildStatic(state);
+
+      renderer.update(500);
+      renderer.update(500);
+
+      expect(textAt(renderer.entityLayer, '2').visible).toBe(true);
     });
   });
 

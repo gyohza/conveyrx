@@ -4,7 +4,7 @@ import { MATERIALS, countMaterials } from '../../sim/content/materials';
 import type { MaterialId } from '../../sim/content/materials';
 import { RECIPES } from '../../sim/content/recipes';
 import { TICK_MS } from '../../sim/content/timing';
-import type { MachineEntity, MachineKind } from '../../sim/core/entities';
+import type { MachineEntity, MachineKind, SourceEntity } from '../../sim/core/entities';
 import type { SimEvent } from '../../sim/core/events';
 import { findEntityAt } from '../../sim/core/grid';
 import {
@@ -50,6 +50,10 @@ interface PacketView {
 
 const SUBSCRIBED_TINT = 0x4ade80;
 const UNSUBSCRIBED_TINT = 0x64748b;
+
+const COUNTER_COLOR = 0xbfdbfe;
+const COUNTER_EMPTY_COLOR = 0xef4444;
+const COUNTER_BLINK_MS = 400;
 
 const BASE_FILL = 0xd97706;
 const BASE_WALL = 0xfef3c7;
@@ -215,8 +219,10 @@ export class WorldRenderer {
   private readonly ghost: Sprite;
   private readonly selection: Sprite;
   private readonly sourceSprites = new Map<number, Sprite>();
+  private readonly sourceCounters = new Map<EntityId, { label: Text; remaining: number }>();
   private readonly conveyorGlowSprites = new Map<EntityId, Sprite>();
   private baseGlow: Graphics | null = null;
+  private blinkClock = 0;
 
   constructor(
     stage: Container,
@@ -249,6 +255,7 @@ export class WorldRenderer {
     this.entityLayer.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.glowLayer.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.sourceSprites.clear();
+    this.sourceCounters.clear();
     this.conveyorGlowSprites.clear();
 
     this.gridLayer.addChild(this.drawGridBackground(state));
@@ -283,6 +290,7 @@ export class WorldRenderer {
       sprite.tint = source.subscribed ? SUBSCRIBED_TINT : UNSUBSCRIBED_TINT;
       this.sourceSprites.set(source.id, sprite);
       this.addCaption(source.kind, source.position, 0xbfdbfe);
+      this.addSourceCounter(source);
     }
     for (const mine of state.mines) {
       if (findEntityAt(state, mine.position)) continue;
@@ -312,6 +320,8 @@ export class WorldRenderer {
   setSourceSubscribed(state: SimState, sourceId: number, subscribed: boolean): void {
     const sprite = this.sourceSprites.get(sourceId);
     if (sprite) sprite.tint = subscribed ? SUBSCRIBED_TINT : UNSUBSCRIBED_TINT;
+    const source = state.sources[sourceId];
+    if (source) this.updateSourceCounter(sourceId, source.sequence.length - source.cursor);
     this.updateGlowPower(state);
   }
 
@@ -326,9 +336,15 @@ export class WorldRenderer {
   applyEvents(state: SimState, events: SimEvent[]): void {
     for (const event of events) {
       switch (event.type) {
-        case 'packetSpawned':
+        case 'packetSpawned': {
           this.spawn(event.packetId, event.material, event.position);
+          const ref = findEntityAt(state, event.position);
+          if (ref?.kind === 'source') {
+            const source = state.sources[ref.id];
+            this.updateSourceCounter(ref.id, source.sequence.length - source.cursor);
+          }
           break;
+        }
         case 'packetMoved':
           this.move(event.packetId, event.position);
           break;
@@ -363,6 +379,14 @@ export class WorldRenderer {
       if (view.despawning && view.scale < 0.05) {
         this.release(packetId, view);
       }
+    }
+
+    this.blinkClock += deltaMS;
+    const blinkOn = Math.floor(this.blinkClock / COUNTER_BLINK_MS) % 2 === 0;
+    for (const counter of this.sourceCounters.values()) {
+      const depleted = counter.remaining <= 0;
+      counter.label.tint = depleted ? COUNTER_EMPTY_COLOR : COUNTER_COLOR;
+      counter.label.visible = !depleted || blinkOn;
     }
   }
 
@@ -493,6 +517,22 @@ export class WorldRenderer {
     const center = cellCenter(pos);
     caption.position.set(center.x, center.y + yOffset);
     this.entityLayer.addChild(caption);
+  }
+
+  private addSourceCounter(source: SourceEntity): void {
+    const remaining = source.sequence.length - source.cursor;
+    const label = makeLabel(String(remaining), 10, COUNTER_COLOR, true);
+    const center = cellCenter(source.position);
+    label.position.set(center.x, center.y - 13);
+    this.entityLayer.addChild(label);
+    this.sourceCounters.set(source.id, { label, remaining });
+  }
+
+  private updateSourceCounter(sourceId: EntityId, remaining: number): void {
+    const counter = this.sourceCounters.get(sourceId);
+    if (!counter) return;
+    counter.remaining = remaining;
+    counter.label.text = String(remaining);
   }
 
   private drawBaseSlotNumbers(rect: GridRect): void {
