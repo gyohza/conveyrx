@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { GameCanvasComponent } from './features/game-canvas/game-canvas.component';
 import { HelpDialogComponent } from './features/help/help-dialog.component';
+import { FooterComponent } from './features/hud/footer.component';
 import { StatusStripComponent } from './features/hud/status-strip.component';
 import { TopBarComponent } from './features/hud/top-bar.component';
 import { RxSidebarComponent } from './features/rx-sidebar/rx-sidebar.component';
@@ -11,6 +12,7 @@ import { UiStateService } from './core/services/ui-state.service';
 @Component({
   selector: 'app-root',
   imports: [
+    FooterComponent,
     GameCanvasComponent,
     HelpDialogComponent,
     StatusStripComponent,
