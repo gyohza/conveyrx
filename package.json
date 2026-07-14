@@ -1,6 +1,6 @@
 {
   "name": "conveyrx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "preinstall": "npx only-allow yarn",
     "ng": "ng",
