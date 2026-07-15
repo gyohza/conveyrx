@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isInsideBase, stepBaseEdge } from './base';
+import { isInBaseBuffer, isInsideBase, stepBaseEdge } from './base';
 import { createPort } from './port';
 import { addConveyor, emptyState } from '../testing/state-builder';
 
@@ -143,5 +143,29 @@ describe('isInsideBase', () => {
     expect(isInsideBase(rect, { x: 5, y: 3 })).toBe(false);
     expect(isInsideBase(rect, { x: 3, y: 1 })).toBe(false);
     expect(isInsideBase(rect, { x: 3, y: 5 })).toBe(false);
+  });
+});
+
+describe('isInBaseBuffer', () => {
+  const rect = { min: { x: 2, y: 2 }, max: { x: 4, y: 4 } };
+
+  it('is true for the ring of cells exactly one cell outside the rect', () => {
+    expect(isInBaseBuffer(rect, { x: 1, y: 3 })).toBe(true); // west edge
+    expect(isInBaseBuffer(rect, { x: 5, y: 3 })).toBe(true); // east edge
+    expect(isInBaseBuffer(rect, { x: 3, y: 1 })).toBe(true); // north edge
+    expect(isInBaseBuffer(rect, { x: 3, y: 5 })).toBe(true); // south edge
+    expect(isInBaseBuffer(rect, { x: 1, y: 1 })).toBe(true); // corner
+  });
+
+  it('is false for cells inside the rect', () => {
+    expect(isInBaseBuffer(rect, { x: 2, y: 2 })).toBe(false);
+    expect(isInBaseBuffer(rect, { x: 3, y: 3 })).toBe(false);
+  });
+
+  it('is false for cells two or more cells away from the rect', () => {
+    expect(isInBaseBuffer(rect, { x: 0, y: 3 })).toBe(false);
+    expect(isInBaseBuffer(rect, { x: 6, y: 3 })).toBe(false);
+    expect(isInBaseBuffer(rect, { x: 3, y: 0 })).toBe(false);
+    expect(isInBaseBuffer(rect, { x: 3, y: 6 })).toBe(false);
   });
 });

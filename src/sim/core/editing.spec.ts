@@ -151,6 +151,32 @@ describe('grid editing', () => {
 
       expect(result.ok).toBe(true);
     });
+
+    it('rejects a machine or source in the one-cell buffer ring around the base — pipes only', () => {
+      const state = createStage1State();
+      state.economy.cash = 100;
+      const ringPos = { x: state.base.min.x, y: state.base.min.y - 1 };
+
+      expect(canPlace(state, MAP, ringPos)).toEqual({
+        ok: false,
+        reason: 'base-buffer-restricted',
+      });
+    });
+
+    it('still allows a conveyor to occupy the buffer ring', () => {
+      const state = createStage1State();
+      const ringPos = { x: state.base.min.x, y: state.base.min.y - 1 };
+
+      expect(canPlace(state, CONVEYOR_EAST, ringPos)).toEqual({ ok: true });
+    });
+
+    it('does not restrict placement two or more cells from the base', () => {
+      const state = createStage1State();
+      state.economy.cash = 100;
+      const farPos = { x: state.base.min.x - 2, y: state.base.min.y };
+
+      expect(canPlace(state, MAP, farPos)).toEqual({ ok: true });
+    });
   });
 
   describe('placing an operator onto an existing conveyor', () => {

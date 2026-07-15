@@ -10,6 +10,17 @@ export function isInsideBase(rect: GridRect, pos: GridPos): boolean {
   return pos.x >= rect.min.x && pos.x <= rect.max.x && pos.y >= rect.min.y && pos.y <= rect.max.y;
 }
 
+/** The ring of cells exactly one cell outside the base rect — pipes only, no machines or sources. */
+export function isInBaseBuffer(rect: GridRect, pos: GridPos): boolean {
+  if (isInsideBase(rect, pos)) return false;
+  return (
+    pos.x >= rect.min.x - 1 &&
+    pos.x <= rect.max.x + 1 &&
+    pos.y >= rect.min.y - 1 &&
+    pos.y <= rect.max.y + 1
+  );
+}
+
 export function isBaseEntryPoint(state: SimState, pos: GridPos, direction: Direction): boolean {
   return isInsideBase(state.base, translate(pos, direction));
 }

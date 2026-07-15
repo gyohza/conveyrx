@@ -3,7 +3,7 @@ import { MACHINE_DEFS } from '../content/machine-defs';
 import type { MaterialId } from '../content/materials';
 import { RECIPES } from '../content/recipes';
 import type { RecipeId } from '../content/recipes';
-import { findBaseEntryConveyor, isBaseEntryPoint, isInsideBase } from './base';
+import { findBaseEntryConveyor, isBaseEntryPoint, isInBaseBuffer, isInsideBase } from './base';
 import type { MachineEntity, MachineKind, MineSpec } from './entities';
 import { computeEvalOrder } from './eval-order';
 import type { SimEvent } from './events';
@@ -30,6 +30,7 @@ export type PlaceResult =
         | 'insufficient-cash'
         | 'machine-port-taken'
         | 'inside-base'
+        | 'base-buffer-restricted'
         | 'base-entry-taken';
     };
 
@@ -123,6 +124,9 @@ function replacesConveyor(state: SimState, request: BuildRequest, pos: GridPos):
 export function canPlace(state: SimState, request: BuildRequest, pos: GridPos): PlaceResult {
   if (!inBounds(state, pos)) return { ok: false, reason: 'out-of-bounds' };
   if (isInsideBase(state.base, pos)) return { ok: false, reason: 'inside-base' };
+  if (request.type !== 'conveyor' && isInBaseBuffer(state.base, pos)) {
+    return { ok: false, reason: 'base-buffer-restricted' };
+  }
   const occupant = findEntityAt(state, pos);
   const replacing = replacesConveyor(state, request, pos);
   if (occupant && !replacing) return { ok: false, reason: 'occupied' };
