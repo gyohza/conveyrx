@@ -59,6 +59,7 @@ function colorHex(color: number): string {
                   {{ machine.config.allow.includes(material) ? '· pass' : '· block' }}
                 </button>
               }
+              <span class="text-emerald-400">Ƶ{{ MACHINE_DEFS.filter.cost }}</span>
             </span>
           }
           @case ('take') {
