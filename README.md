@@ -4,6 +4,10 @@
 [![Version](https://img.shields.io/github/package-json/v/gyohza/conveyrx)](https://github.com/gyohza/conveyrx/releases)
 [![Play](https://img.shields.io/badge/play-rx.gyohza.dev-38bdf8)](https://rx.gyohza.dev)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+[![Package Manager](https://img.shields.io/badge/package%20manager-yarn-2c8ebb)](https://yarnpkg.com)
+[![Angular](https://img.shields.io/github/package-json/dependency-version/gyohza/conveyrx/@angular/core)](https://angular.dev)
+[![RxJS](https://img.shields.io/github/package-json/dependency-version/gyohza/conveyrx/rxjs)](https://rxjs.dev)
+[![PixiJS](https://img.shields.io/github/package-json/dependency-version/gyohza/conveyrx/pixi.js)](https://pixijs.com)
 
 A browser game about running an automated mineral-extraction rig on a carbon-rich asteroid, that teaches
 [RxJS](https://rxjs.dev) by turning its operators into buildable machines. You place conveyors and
