@@ -18,6 +18,7 @@ import { directionToRadians } from '../../sim/core/types';
 import type { Direction, EntityId, GridPos, GridRect, PacketId } from '../../sim/core/types';
 import type { GameTextures } from '../sprites/game-textures';
 import { CELL_SIZE } from '../sprites/shapes';
+import { generateBaseTraces, TRACE_SUBDIVISIONS } from './base-traces';
 
 export { CELL_SIZE, TICK_MS };
 
@@ -55,8 +56,12 @@ const COUNTER_COLOR = 0xbfdbfe;
 const COUNTER_EMPTY_COLOR = 0xef4444;
 const COUNTER_BLINK_MS = 400;
 
-const BASE_FILL = 0xd97706;
-const BASE_WALL = 0xfef3c7;
+const HULL_FLOOR = 0xdbe3ea;
+const HULL_WALL = 0xc7d2de;
+const HULL_SEAM = 0xaab6c4;
+const BUS_COLOR = 0x38bdf8;
+const BUS_PAD_COLOR = 0xa5f3fc;
+const SLOT_NUM_COLOR = 0x1f2937;
 
 const LANE_COLORS = [
   0x22d3ee, 0xf472b6, 0x60a5fa, 0x4ade80, 0xa78bfa, 0xfb923c, 0x2dd4bf, 0xf87171,
@@ -222,6 +227,7 @@ export class WorldRenderer {
   private readonly sourceCounters = new Map<EntityId, { label: Text; remaining: number }>();
   private readonly conveyorGlowSprites = new Map<EntityId, Sprite>();
   private baseGlow: Graphics | null = null;
+  private gridBoundsMask: Graphics | null = null;
   private blinkClock = 0;
 
   constructor(
@@ -470,6 +476,9 @@ export class WorldRenderer {
     const mask = new Graphics().rect(0, 0, width * CELL_SIZE, height * CELL_SIZE).fill(0xffffff);
     this.gridLayer.addChild(mask);
     g.mask = mask;
+    // Reused below to clip the base's halo/traces to the same bounds, so nothing they draw can
+    // bleed past the play field either — the mask stays invisible either way, hidden under `g`.
+    this.gridBoundsMask = mask;
     return g;
   }
 
@@ -478,20 +487,66 @@ export class WorldRenderer {
     const y0 = rect.min.y * CELL_SIZE;
     const width = (rect.max.x - rect.min.x + 1) * CELL_SIZE;
     const height = (rect.max.y - rect.min.y + 1) * CELL_SIZE;
+    const radius = Math.min(26, width / 2 - 6, height / 2 - 6);
+
+    // The halo and the pins that poke into the buffer ring can reach past the play field's edge
+    // when the base sits flush against it — clip both to the grid bounds (reusing the same mask
+    // drawGridBackground already set up) so nothing bleeds into the surrounding void.
+    const clip = this.gridBoundsMask;
+
+    // Always-on, dim — the buffer ring's only geometry, so pipes can dock at any cell in it.
+    const halo = new Graphics();
+    halo
+      .roundRect(x0, y0, width, height, radius)
+      .stroke({ color: HULL_WALL, width: 34, alpha: 0.12 });
+    halo
+      .roundRect(x0, y0, width, height, radius)
+      .stroke({ color: HULL_WALL, width: 16, alpha: 0.18 });
+    if (clip) halo.mask = clip;
+    this.gridLayer.addChild(halo);
 
     const g = new Graphics();
-    g.rect(x0, y0, width, height).fill({ color: BASE_FILL, alpha: 0.16 });
-    g.rect(x0, y0, width, height).stroke({ color: BASE_WALL, width: 4, alpha: 0.9 });
+    g.roundRect(x0, y0, width, height, radius).fill({ color: HULL_FLOOR });
+    g.roundRect(x0 + 8, y0 + 8, width - 16, height - 16, Math.max(radius - 6, 4)).stroke({
+      color: HULL_SEAM,
+      width: 1.5,
+      alpha: 0.5,
+    });
+
+    const pxPerSub = CELL_SIZE / TRACE_SUBDIVISIONS;
+    for (const trace of generateBaseTraces(rect)) {
+      const [start, ...rest] = trace.points;
+      g.moveTo(start.x * pxPerSub, start.y * pxPerSub);
+      for (const point of rest) g.lineTo(point.x * pxPerSub, point.y * pxPerSub);
+      g.stroke({ color: BUS_COLOR, width: 3, alpha: 0.8 });
+
+      const pad = trace.points[trace.points.length - 1];
+      const padSize = 6;
+      g.roundRect(
+        pad.x * pxPerSub - padSize / 2,
+        pad.y * pxPerSub - padSize / 2,
+        padSize,
+        padSize,
+        1.5,
+      ).fill({ color: BUS_PAD_COLOR });
+    }
+
+    g.roundRect(x0, y0, width, height, radius).stroke({ color: HULL_WALL, width: 6, alpha: 1 });
+    if (clip) g.mask = clip;
     this.gridLayer.addChild(g);
 
     const glow = new Graphics();
-    glow.rect(x0, y0, width, height).stroke({ color: BASE_WALL, width: 12, alpha: 0.35 });
-    glow.rect(x0, y0, width, height).stroke({ color: 0xfffbea, width: 5, alpha: 0.95 });
+    glow
+      .roundRect(x0, y0, width, height, radius)
+      .stroke({ color: HULL_WALL, width: 12, alpha: 0.35 });
+    glow
+      .roundRect(x0, y0, width, height, radius)
+      .stroke({ color: 0xecfeff, width: 5, alpha: 0.95 });
     glow.alpha = 0;
     this.glowLayer.addChild(glow);
     this.baseGlow = glow;
 
-    const label = makeLabel('subscriber', 11, BASE_WALL, true);
+    const label = makeLabel('subscriber', 11, HULL_WALL, true);
     label.position.set(x0 + width / 2, y0 - 9);
     this.gridLayer.addChild(label);
   }
@@ -547,7 +602,7 @@ export class WorldRenderer {
 
   private addSlotNumber(n: number, pos: GridPos): void {
     const center = cellCenter(pos);
-    const label = makeLabel(`${n}`, 12, 0xfef3c7, true);
+    const label = makeLabel(`${n}`, 12, SLOT_NUM_COLOR, true);
     label.position.set(center.x, center.y);
     this.gridLayer.addChild(label);
   }
