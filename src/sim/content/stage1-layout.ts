@@ -17,14 +17,11 @@ function seedBaseRect(sinkPos: GridPos, grid: GridSize): GridRect {
 }
 
 const STAGE1_MAP = `
-  .  .       .  .  .  .  .  .  .  .  .  .
-  .  .       .  .  .  .  .  .  .  .  .  .
-  .  .       .  .  .  .  .  .  .  .  .  .
-  .  MCCCCC  .  .  .  .  .  .  .  .  S  .
-  .  .       .  .  .  .  .  .  .  .  .  .
-  .  .       .  .  .  .  .  .  .  .  .  .
-  .  .       .  .  .  .  .  .  .  .  .  .
-  .  .       .  .  .  .  .  .  .  .  .  .
+  .  .       .  .  .  .  .  .  .
+  .  .       .  .  .  .  .  .  .
+  .  MCCCCC  .  .  .  .  .  .  S
+  .  .       .  .  .  .  .  .  .
+  .  .       .  .  .  .  .  .  .
 `;
 
 const parsed = parseStageMap(STAGE1_MAP);

@@ -89,7 +89,7 @@ describe('RxSidebarComponent', () => {
     fixture.detectChanges();
 
     engine.toggleSubscribe(sourceId);
-    engine.place({ type: 'conveyor', direction: 'east' }, { x: 5, y: 5 });
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 5, y: 1 });
     fixture.detectChanges();
 
     const text = (fixture.nativeElement.querySelector('pre') as HTMLElement).textContent ?? '';

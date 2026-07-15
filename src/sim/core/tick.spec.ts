@@ -20,10 +20,9 @@ function buildWorkingLine(): SimState {
   const y = minePos.y;
   const machineX = 5;
   for (let x = minePos.x + 1; x < state.base.min.x; x++) {
+    place(state, { type: 'conveyor', direction: 'east' }, { x, y });
     if (x === machineX) {
       place(state, { type: 'machine', kind: 'map' }, { x, y });
-    } else {
-      place(state, { type: 'conveyor', direction: 'east' }, { x, y });
     }
   }
   toggleSubscribe(state, sourceId);

@@ -10,9 +10,10 @@ import type { MineSpec } from '../../../sim/core/entities';
 
 function placeMachine(engine: SimEngineService, kind: 'map' | 'filter' | 'take') {
   engine.state().economy.cash = 500;
-  engine.place({ type: 'conveyor', direction: 'east' }, { x: 4, y: 4 });
-  engine.place({ type: 'machine', kind }, { x: 5, y: 4 });
-  return { x: 5, y: 4 };
+  const pos = { x: 5, y: 4 };
+  engine.place({ type: 'conveyor', direction: 'east' }, pos);
+  engine.place({ type: 'machine', kind }, pos);
+  return pos;
 }
 
 describe('StatusStripComponent', () => {
@@ -56,7 +57,7 @@ describe('StatusStripComponent', () => {
     const ui = TestBed.inject(UiStateService);
     const engine = TestBed.inject(SimEngineService);
     const spring: MineSpec = {
-      position: { x: 6, y: 6 },
+      position: { x: 3, y: 3 },
       sequence: ['ice', 'ice', 'ice', 'slag', 'slag'],
     };
     engine.state().mines.push(spring);

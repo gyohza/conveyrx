@@ -306,7 +306,9 @@ describe('GameCanvasComponent', () => {
 
   it('shows a build ghost when hovering with a tool selected', async () => {
     const { app, handlers } = await mount();
-    TestBed.inject(SimEngineService).state().economy.cash = 100;
+    const engine = TestBed.inject(SimEngineService);
+    engine.state().economy.cash = 100;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 4, y: 4 });
     TestBed.inject(BuildToolService).select('map');
 
     handlers.current!.onHover({ x: 4, y: 4 });

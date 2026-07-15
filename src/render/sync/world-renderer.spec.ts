@@ -72,6 +72,7 @@ describe('WorldRenderer', () => {
       const { renderer } = buildRenderer();
       const state = createStage1State();
       state.economy.cash = 100;
+      place(state, { type: 'conveyor', direction: 'east' }, { x: 5, y: 3 });
       place(state, { type: 'machine', kind: 'map' }, { x: 5, y: 3 });
       place(state, { type: 'conveyor', direction: 'east' }, { x: 2, y: 3 });
       place(state, { type: 'source' }, STAGE1_MINES[0].position);
@@ -109,7 +110,7 @@ describe('WorldRenderer', () => {
       const sink = Object.values(state.sinks)[0];
       const row = sink.position.y - base.min.y;
       const col = sink.position.x - base.min.x;
-      expect(row * width + col + 1).toBe(5); // dead center of the default 3x3 base
+      expect(row * width + col + 1).toBe(4); // its own computed slot in the clipped 2x3 base
     });
 
     it('shows a lettered packet icon and count for each material a mine yields', () => {

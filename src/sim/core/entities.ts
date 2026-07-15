@@ -34,6 +34,7 @@ interface MachineEntityBase {
   inputs: Port[];
   outputs: Port[];
   internal: unknown;
+  pipeDirection?: Direction;
 }
 
 /** No `direction` field: a machine's input/output sides are derived from adjacent conveyor topology (see routing.ts's machinePorts), not player-chosen. */

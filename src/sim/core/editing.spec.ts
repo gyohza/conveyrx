@@ -15,25 +15,35 @@ const MAP = {
 } as const;
 const SOURCE = { type: 'source' } as const;
 
+const CENTER = { x: 3, y: 1 };
+const CENTER_WEST = { x: 2, y: 1 };
+const CENTER_EAST = { x: 4, y: 1 };
+const CENTER_NORTH = { x: 3, y: 0 };
+const CENTER_SOUTH = { x: 3, y: 2 };
+const SIMPLE = { x: 2, y: 0 };
+const FAR = { x: 0, y: 2 };
+const EMPTY_CELL = { x: 4, y: 2 };
+
 describe('grid editing', () => {
   describe('place', () => {
     it('places a conveyor, charges its cost, and includes it in the eval order', () => {
       const state = createStage1State();
 
-      const result = place(state, CONVEYOR_EAST, { x: 2, y: 3 });
+      const result = place(state, CONVEYOR_EAST, SIMPLE);
 
       expect(result.ok).toBe(true);
       expect(state.economy.cash).toBe(START_CASH - CONVEYOR_COST);
       const placed = Object.values(state.conveyors)[0];
-      expect(placed).toMatchObject({ position: { x: 2, y: 3 }, direction: 'east', slot: null });
+      expect(placed).toMatchObject({ position: SIMPLE, direction: 'east', slot: null });
       expect(state.evalOrder).toContainEqual({ kind: 'conveyor', id: placed.id });
     });
 
     it('places a machine with the requested recipe and charges the machine cost', () => {
       const state = createStage1State();
+      place(state, CONVEYOR_EAST, CENTER);
       state.economy.cash = 100;
 
-      const result = place(state, MAP, { x: 5, y: 3 });
+      const result = place(state, MAP, CENTER);
 
       expect(result.ok).toBe(true);
       expect(state.economy.cash).toBe(100 - RECIPES.crystallize.cost);
@@ -58,9 +68,9 @@ describe('grid editing', () => {
 
     it('rejects placement on an occupied cell', () => {
       const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
+      place(state, CONVEYOR_EAST, SIMPLE);
 
-      expect(place(state, CONVEYOR_WEST, { x: 2, y: 3 })).toEqual({
+      expect(place(state, CONVEYOR_WEST, SIMPLE)).toEqual({
         ok: false,
         reason: 'occupied',
       });
@@ -70,7 +80,7 @@ describe('grid editing', () => {
       const state = createStage1State();
       state.economy.cash = 100;
 
-      expect(place(state, SOURCE, { x: 5, y: 3 })).toEqual({
+      expect(place(state, SOURCE, SIMPLE)).toEqual({
         ok: false,
         reason: 'not-a-mine',
       });
@@ -78,9 +88,10 @@ describe('grid editing', () => {
 
     it('rejects placement the player cannot afford, leaving cash untouched', () => {
       const state = createStage1State();
+      place(state, CONVEYOR_EAST, CENTER);
       state.economy.cash = buildCost(MAP) - 1;
 
-      expect(place(state, MAP, { x: 5, y: 3 })).toEqual({
+      expect(place(state, MAP, CENTER)).toEqual({
         ok: false,
         reason: 'insufficient-cash',
       });
@@ -108,7 +119,7 @@ describe('grid editing', () => {
     it('canPlace validates without mutating', () => {
       const state = createStage1State();
 
-      expect(canPlace(state, CONVEYOR_EAST, { x: 2, y: 3 })).toEqual({ ok: true });
+      expect(canPlace(state, CONVEYOR_EAST, SIMPLE)).toEqual({ ok: true });
       expect(state.economy.cash).toBe(START_CASH);
       expect(Object.keys(state.conveyors)).toHaveLength(0);
     });
@@ -136,9 +147,9 @@ describe('grid editing', () => {
       const state = createStage1State();
       const firstEntry = { x: state.base.min.x - 1, y: STAGE1_SINK_POS.y };
       place(state, CONVEYOR_EAST, firstEntry);
-      const secondEntry = { x: STAGE1_SINK_POS.x, y: state.base.min.y - 1 };
+      const secondEntry = { x: STAGE1_SINK_POS.x, y: state.base.max.y + 1 };
 
-      const result = place(state, { type: 'conveyor', direction: 'south' }, secondEntry);
+      const result = place(state, { type: 'conveyor', direction: 'north' }, secondEntry);
 
       expect(result).toEqual({ ok: false, reason: 'base-entry-taken' });
     });
@@ -155,7 +166,7 @@ describe('grid editing', () => {
     it('rejects a machine or source in the one-cell buffer ring around the base — pipes only', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      const ringPos = { x: state.base.min.x, y: state.base.min.y - 1 };
+      const ringPos = { x: state.base.min.x, y: state.base.max.y + 1 };
 
       expect(canPlace(state, MAP, ringPos)).toEqual({
         ok: false,
@@ -165,7 +176,7 @@ describe('grid editing', () => {
 
     it('still allows a conveyor to occupy the buffer ring', () => {
       const state = createStage1State();
-      const ringPos = { x: state.base.min.x, y: state.base.min.y - 1 };
+      const ringPos = { x: state.base.min.x, y: state.base.max.y + 1 };
 
       expect(canPlace(state, CONVEYOR_EAST, ringPos)).toEqual({ ok: true });
     });
@@ -174,52 +185,59 @@ describe('grid editing', () => {
       const state = createStage1State();
       state.economy.cash = 100;
       const farPos = { x: state.base.min.x - 2, y: state.base.min.y };
+      place(state, CONVEYOR_EAST, farPos);
 
       expect(canPlace(state, MAP, farPos)).toEqual({ ok: true });
     });
   });
 
   describe('placing an operator onto an existing conveyor', () => {
-    it('replaces the conveyor, refunding it against the machine cost', () => {
+    it('requires an existing pipe — an operator can never be dropped onto an empty cell', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 5, y: 3 });
+
+      expect(canPlace(state, MAP, CENTER)).toEqual({ ok: false, reason: 'requires-pipe' });
+      expect(place(state, MAP, CENTER)).toEqual({ ok: false, reason: 'requires-pipe' });
+    });
+
+    it('slots onto the pipe for exactly its own cost — no conveyor refund, unlike before', () => {
+      const state = createStage1State();
+      state.economy.cash = 100;
+      place(state, CONVEYOR_EAST, CENTER);
       const cashAfterConveyor = state.economy.cash;
 
-      const result = place(state, MAP, { x: 5, y: 3 });
+      const result = place(state, MAP, CENTER);
 
       expect(result.ok).toBe(true);
       expect(Object.keys(state.conveyors)).toHaveLength(0);
-      expect(Object.values(state.machines)[0]).toMatchObject({ position: { x: 5, y: 3 } });
-      expect(state.economy.cash).toBe(cashAfterConveyor + CONVEYOR_COST - RECIPES.crystallize.cost);
+      expect(Object.values(state.machines)[0]).toMatchObject({ position: CENTER });
+      expect(state.economy.cash).toBe(cashAfterConveyor - RECIPES.crystallize.cost);
     });
 
     it('replaces a conveyor that renders as a curve too — curve-vs-straight is a render detail, not a sim one', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 4, y: 3 }); // feeds (5,3) from the west
-      place(state, CONVEYOR_SOUTH, { x: 5, y: 3 }); // turns south here: renders as a curve tile
+      place(state, CONVEYOR_EAST, CENTER_WEST); // feeds CENTER from the west
+      place(state, CONVEYOR_SOUTH, CENTER); // turns south here: renders as a curve tile
       const cashAfterConveyors = state.economy.cash;
 
-      const result = place(state, MAP, { x: 5, y: 3 });
+      const result = place(state, MAP, CENTER);
 
       expect(result.ok).toBe(true);
-      expect(Object.values(state.conveyors)[0].position).toEqual({ x: 4, y: 3 });
-      expect(Object.values(state.machines)[0]).toMatchObject({ position: { x: 5, y: 3 } });
-      expect(state.economy.cash).toBe(
-        cashAfterConveyors + CONVEYOR_COST - RECIPES.crystallize.cost,
-      );
+      expect(Object.values(state.conveyors)[0].position).toEqual(CENTER_WEST);
+      expect(Object.values(state.machines)[0]).toMatchObject({ position: CENTER });
+      expect(state.economy.cash).toBe(cashAfterConveyors - RECIPES.crystallize.cost);
     });
 
     it('despawns a packet riding the replaced conveyor and reports it as an event', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 5, y: 3 });
+      place(state, CONVEYOR_EAST, CENTER);
       const conveyor = Object.values(state.conveyors)[0];
       const packet = addPacket(state);
       conveyor.slot = packet.id;
 
-      const result = place(state, MAP, { x: 5, y: 3 });
+      const result = place(state, MAP, CENTER);
 
       expect(result.ok && result.events).toEqual([
         { type: 'packetDespawned', packetId: packet.id },
@@ -227,23 +245,14 @@ describe('grid editing', () => {
       expect(state.packets[packet.id]).toBeUndefined();
     });
 
-    it('allows the replacement when cash only covers it with the conveyor refund included', () => {
-      const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 5, y: 3 });
-      state.economy.cash = RECIPES.crystallize.cost - CONVEYOR_COST;
-
-      expect(canPlace(state, MAP, { x: 5, y: 3 })).toEqual({ ok: true });
-      expect(place(state, MAP, { x: 5, y: 3 }).ok).toBe(true);
-      expect(state.economy.cash).toBe(0);
-    });
-
-    it('still blocks placement on a machine, source, or sink (only conveyors are replaced)', () => {
+    it('still blocks placement on a machine, source, or sink (an operator can only ever slot onto a conveyor)', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, MAP, { x: 5, y: 3 });
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, MAP, CENTER);
       place(state, SOURCE, STAGE1_MINES[0].position);
 
-      expect(place(state, MAP, { x: 5, y: 3 })).toEqual({ ok: false, reason: 'occupied' });
+      expect(place(state, MAP, CENTER)).toEqual({ ok: false, reason: 'occupied' });
       expect(place(state, MAP, STAGE1_MINES[0].position)).toEqual({
         ok: false,
         reason: 'occupied',
@@ -270,19 +279,21 @@ describe('grid editing', () => {
     it('allows a machine with exactly one incoming and one outgoing neighbor', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 4, y: 3 }); // feeds into (5,3)
-      place(state, CONVEYOR_EAST, { x: 6, y: 3 }); // merely touches (5,3), receives its output
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_WEST); // feeds into CENTER
+      place(state, CONVEYOR_EAST, CENTER_EAST); // merely touches CENTER, receives its output
 
-      expect(place(state, MAP, { x: 5, y: 3 })).toEqual({ ok: true });
+      expect(place(state, MAP, CENTER)).toEqual({ ok: true });
     });
 
     it('rejects a conveyor that would give an existing machine a second incoming neighbor', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, MAP, { x: 5, y: 3 });
-      place(state, CONVEYOR_EAST, { x: 4, y: 3 }); // first incoming neighbor, from the west
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, MAP, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_WEST); // first incoming neighbor, from the west
 
-      expect(place(state, CONVEYOR_SOUTH, { x: 5, y: 2 })).toEqual({
+      expect(place(state, CONVEYOR_SOUTH, CENTER_NORTH)).toEqual({
         ok: false,
         reason: 'machine-port-taken',
       });
@@ -291,10 +302,11 @@ describe('grid editing', () => {
     it('rejects a conveyor that would give an existing machine a second outgoing neighbor', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, MAP, { x: 5, y: 3 });
-      place(state, CONVEYOR_EAST, { x: 6, y: 3 }); // first outgoing neighbor, to the east
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, MAP, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_EAST); // first outgoing neighbor, to the east
 
-      expect(place(state, CONVEYOR_SOUTH, { x: 5, y: 4 })).toEqual({
+      expect(place(state, CONVEYOR_SOUTH, CENTER_SOUTH)).toEqual({
         ok: false,
         reason: 'machine-port-taken',
       });
@@ -303,10 +315,11 @@ describe('grid editing', () => {
     it('rejects placing a machine into a spot already surrounded by two feeding neighbors', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 4, y: 3 }); // would feed (5,3) from the west
-      place(state, CONVEYOR_SOUTH, { x: 5, y: 2 }); // would feed (5,3) from the north
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_WEST); // would feed CENTER from the west
+      place(state, CONVEYOR_SOUTH, CENTER_NORTH); // would feed CENTER from the north
 
-      expect(place(state, MAP, { x: 5, y: 3 })).toEqual({
+      expect(place(state, MAP, CENTER)).toEqual({
         ok: false,
         reason: 'machine-port-taken',
       });
@@ -315,10 +328,11 @@ describe('grid editing', () => {
     it('rejects placing a machine into a spot already surrounded by two non-feeding neighbors', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 6, y: 3 }); // touches (5,3) from the east, doesn't feed it
-      place(state, CONVEYOR_SOUTH, { x: 5, y: 4 }); // touches (5,3) from the south, doesn't feed it
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_EAST); // touches CENTER from the east, doesn't feed it
+      place(state, CONVEYOR_SOUTH, CENTER_SOUTH); // touches CENTER from the south, doesn't feed it
 
-      expect(place(state, MAP, { x: 5, y: 3 })).toEqual({
+      expect(place(state, MAP, CENTER)).toEqual({
         ok: false,
         reason: 'machine-port-taken',
       });
@@ -353,20 +367,21 @@ describe('grid editing', () => {
     it('lets an unrelated conveyor placement elsewhere succeed even with a fully-connected machine nearby', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 4, y: 3 });
-      place(state, CONVEYOR_EAST, { x: 6, y: 3 });
-      place(state, MAP, { x: 5, y: 3 });
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_WEST);
+      place(state, CONVEYOR_EAST, CENTER_EAST);
+      place(state, MAP, CENTER);
 
-      expect(place(state, CONVEYOR_WEST, { x: 8, y: 6 })).toEqual({ ok: true });
+      expect(place(state, CONVEYOR_WEST, FAR)).toEqual({ ok: true });
     });
   });
 
   describe('erase', () => {
     it('removes a placed conveyor and refunds its full cost', () => {
       const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
+      place(state, CONVEYOR_EAST, SIMPLE);
 
-      const result = erase(state, { x: 2, y: 3 });
+      const result = erase(state, SIMPLE);
 
       expect(result).toMatchObject({ ok: true, refund: CONVEYOR_COST });
       expect(Object.keys(state.conveyors)).toHaveLength(0);
@@ -375,12 +390,12 @@ describe('grid editing', () => {
 
     it('despawns any packet riding the erased conveyor', () => {
       const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
+      place(state, CONVEYOR_EAST, SIMPLE);
       const conveyor = Object.values(state.conveyors)[0];
       const packet = addPacket(state);
       conveyor.slot = packet.id;
 
-      const result = erase(state, { x: 2, y: 3 });
+      const result = erase(state, SIMPLE);
 
       expect(result.ok && result.events).toEqual([
         { type: 'packetDespawned', packetId: packet.id },
@@ -411,17 +426,36 @@ describe('grid editing', () => {
     it('reports empty cells as nothing to erase', () => {
       const state = createStage1State();
 
-      expect(erase(state, { x: 5, y: 5 })).toEqual({ ok: false, reason: 'empty' });
+      expect(erase(state, EMPTY_CELL)).toEqual({ ok: false, reason: 'empty' });
+    });
+
+    it('restores the underlying pipe, in its original direction, once the operator sitting on it is erased', () => {
+      const state = createStage1State();
+      state.economy.cash = 100;
+      place(state, CONVEYOR_SOUTH, CENTER);
+      place(state, MAP, CENTER);
+      const cashAfterMap = state.economy.cash;
+
+      const result = erase(state, CENTER);
+
+      expect(result).toMatchObject({ ok: true, refund: RECIPES.crystallize.cost });
+      expect(state.economy.cash).toBe(cashAfterMap + RECIPES.crystallize.cost);
+      expect(Object.keys(state.machines)).toHaveLength(0);
+      expect(Object.values(state.conveyors)[0]).toMatchObject({
+        position: CENTER,
+        direction: 'south',
+        slot: null,
+      });
     });
   });
 
   describe('clearAll', () => {
-    it('erases every conveyor and machine, refunding each, and leaves anchors untouched', () => {
+    it('erases every conveyor and machine, refunding each — including the pipe an operator was slotted onto', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
-      place(state, CONVEYOR_EAST, { x: 4, y: 3 });
-      place(state, MAP, { x: 5, y: 3 });
+      place(state, CONVEYOR_EAST, CENTER_WEST);
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, MAP, CENTER);
       const cashAfterBuilding = state.economy.cash;
 
       const result = clearAll(state);
@@ -436,7 +470,7 @@ describe('grid editing', () => {
 
     it('despawns packets riding cleared conveyors', () => {
       const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
+      place(state, CONVEYOR_EAST, SIMPLE);
       const conveyor = Object.values(state.conveyors)[0];
       const packet = addPacket(state);
       conveyor.slot = packet.id;
@@ -456,10 +490,10 @@ describe('grid editing', () => {
   describe('redirectConveyor', () => {
     it("changes an existing conveyor's direction in place, at no cost", () => {
       const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
+      place(state, CONVEYOR_EAST, SIMPLE);
       const cashBefore = state.economy.cash;
 
-      const changed = redirectConveyor(state, { x: 2, y: 3 }, 'south');
+      const changed = redirectConveyor(state, SIMPLE, 'south');
 
       expect(changed).toBe(true);
       expect(Object.values(state.conveyors)[0].direction).toBe('south');
@@ -468,11 +502,11 @@ describe('grid editing', () => {
 
     it('updates the eval order to reflect the new direction', () => {
       const state = createStage1State();
-      place(state, CONVEYOR_EAST, { x: 2, y: 3 });
-      place(state, CONVEYOR_SOUTH, { x: 2, y: 4 });
+      place(state, CONVEYOR_EAST, CENTER_NORTH);
+      place(state, CONVEYOR_SOUTH, CENTER);
       const conveyor = Object.values(state.conveyors)[0];
 
-      redirectConveyor(state, { x: 2, y: 3 }, 'south'); // now feeds the south conveyor instead
+      redirectConveyor(state, CENTER_NORTH, 'south'); // now feeds CENTER instead
 
       const southConveyor = Object.values(state.conveyors)[1];
       const conveyorIndex = state.evalOrder.findIndex(
@@ -487,20 +521,21 @@ describe('grid editing', () => {
     it('does nothing to an empty cell or a non-conveyor entity', () => {
       const state = createStage1State();
 
-      expect(redirectConveyor(state, { x: 5, y: 5 }, 'south')).toBe(false);
+      expect(redirectConveyor(state, EMPTY_CELL, 'south')).toBe(false);
       expect(redirectConveyor(state, STAGE1_SINK_POS, 'south')).toBe(false);
     });
 
     it('refuses a redirect that would give an existing machine a second outgoing neighbor', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, MAP, { x: 5, y: 3 });
-      place(state, CONVEYOR_EAST, { x: 6, y: 3 }); // first outgoing neighbor, to the east
+      place(state, CONVEYOR_EAST, CENTER);
+      place(state, MAP, CENTER);
+      place(state, CONVEYOR_EAST, CENTER_EAST); // first outgoing neighbor, to the east
       const feeder = { type: 'conveyor', direction: 'north' } as const;
-      place(state, feeder, { x: 5, y: 4 }); // legal: points at the machine, feeding it
+      place(state, feeder, CENTER_SOUTH); // legal: points at the machine, feeding it
 
       // Redirecting it away turns it from "feeding" into a second, merely-touching receiver.
-      const changed = redirectConveyor(state, { x: 5, y: 4 }, 'south');
+      const changed = redirectConveyor(state, CENTER_SOUTH, 'south');
 
       expect(changed).toBe(false);
       expect(Object.values(state.conveyors)[1].direction).toBe('north');
@@ -510,13 +545,13 @@ describe('grid editing', () => {
       const state = createStage1State();
       const firstEntry = { x: state.base.min.x - 1, y: STAGE1_SINK_POS.y };
       place(state, CONVEYOR_EAST, firstEntry); // the base's one entry
-      const other = { x: STAGE1_SINK_POS.x, y: state.base.min.y - 1 };
-      place(state, { type: 'conveyor', direction: 'north' }, other); // pointed away from the base
+      const other = { x: STAGE1_SINK_POS.x, y: state.base.max.y + 1 };
+      place(state, { type: 'conveyor', direction: 'south' }, other); // pointed away from the base
 
-      const changed = redirectConveyor(state, other, 'south'); // now points at the base
+      const changed = redirectConveyor(state, other, 'north'); // now points at the base
 
       expect(changed).toBe(false);
-      expect(Object.values(state.conveyors)[1].direction).toBe('north'); // unchanged
+      expect(Object.values(state.conveyors)[1].direction).toBe('south'); // unchanged
     });
   });
 });

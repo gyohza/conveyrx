@@ -31,7 +31,8 @@ export type PlaceResult =
         | 'machine-port-taken'
         | 'inside-base'
         | 'base-buffer-restricted'
-        | 'base-entry-taken';
+        | 'base-entry-taken'
+        | 'requires-pipe';
     };
 
 export type ConfigUpdate =
@@ -117,10 +118,6 @@ function entityPortConflict(state: SimState, pos: GridPos): boolean {
   return inCount > 1 || outCount > 1;
 }
 
-function replacesConveyor(state: SimState, request: BuildRequest, pos: GridPos): boolean {
-  return request.type === 'machine' && findEntityAt(state, pos)?.kind === 'conveyor';
-}
-
 export function canPlace(state: SimState, request: BuildRequest, pos: GridPos): PlaceResult {
   if (!inBounds(state, pos)) return { ok: false, reason: 'out-of-bounds' };
   if (isInsideBase(state.base, pos)) return { ok: false, reason: 'inside-base' };
@@ -128,13 +125,16 @@ export function canPlace(state: SimState, request: BuildRequest, pos: GridPos): 
     return { ok: false, reason: 'base-buffer-restricted' };
   }
   const occupant = findEntityAt(state, pos);
-  const replacing = replacesConveyor(state, request, pos);
-  if (occupant && !replacing) return { ok: false, reason: 'occupied' };
+  if (request.type === 'machine') {
+    if (!occupant) return { ok: false, reason: 'requires-pipe' };
+    if (occupant.kind !== 'conveyor') return { ok: false, reason: 'occupied' };
+  } else if (occupant) {
+    return { ok: false, reason: 'occupied' };
+  }
   if (request.type === 'source' && !findMine(state, pos)) {
     return { ok: false, reason: 'not-a-mine' };
   }
-  const availableCash = state.economy.cash + (replacing ? CONVEYOR_COST : 0);
-  if (availableCash < buildCost(request)) return { ok: false, reason: 'insufficient-cash' };
+  if (state.economy.cash < buildCost(request)) return { ok: false, reason: 'insufficient-cash' };
   if (
     request.type === 'conveyor'
       ? conveyorConflictsWithMachinePorts(state, pos, request.direction)
@@ -157,9 +157,16 @@ export function place(state: SimState, request: BuildRequest, pos: GridPos): Pla
   if (!check.ok) return check;
 
   const events: SimEvent[] = [];
-  if (replacesConveyor(state, request, pos)) {
-    const replaced = erase(state, pos);
-    if (replaced.ok) events.push(...replaced.events);
+  let pipeDirection: Direction | undefined;
+  if (request.type === 'machine') {
+    const occupant = findEntityAt(state, pos)!;
+    const conveyor = state.conveyors[occupant.id];
+    pipeDirection = conveyor.direction;
+    if (conveyor.slot !== null) {
+      events.push({ type: 'packetDespawned', packetId: conveyor.slot });
+      delete state.packets[conveyor.slot];
+    }
+    delete state.conveyors[occupant.id];
   }
 
   const id = state.nextEntityId++;
@@ -185,6 +192,7 @@ export function place(state: SimState, request: BuildRequest, pos: GridPos): Pla
         internal: undefined,
         kind: 'map',
         config: { recipeId: MACHINE_DEFS.map.availableRecipes![0] },
+        pipeDirection,
       };
     } else if (request.kind === 'filter') {
       state.machines[id] = {
@@ -192,6 +200,7 @@ export function place(state: SimState, request: BuildRequest, pos: GridPos): Pla
         internal: undefined,
         kind: 'filter',
         config: { allow: [MACHINE_DEFS.filter.filterableMaterials![0]] },
+        pipeDirection,
       };
     } else {
       state.machines[id] = {
@@ -199,6 +208,7 @@ export function place(state: SimState, request: BuildRequest, pos: GridPos): Pla
         kind: 'take',
         config: { count: MACHINE_DEFS.take.availableCounts![0] },
         internal: { passed: 0, sourceWasSubscribed: false },
+        pipeDirection,
       };
     }
   }
@@ -271,6 +281,15 @@ export function erase(state: SimState, pos: GridPos): EraseResult {
     [...machine.inputs, ...machine.outputs].forEach((port) => port.queue.forEach(despawn));
     delete state.machines[target.id];
     refund = machineCost(machine);
+    if (machine.pipeDirection) {
+      const conveyorId = state.nextEntityId++;
+      state.conveyors[conveyorId] = {
+        id: conveyorId,
+        position: pos,
+        direction: machine.pipeDirection,
+        slot: null,
+      };
+    }
   }
 
   state.economy.cash += refund;
@@ -279,18 +298,19 @@ export function erase(state: SimState, pos: GridPos): EraseResult {
 }
 
 export function clearAll(state: SimState): { refund: number; events: SimEvent[] } {
-  const positions = [
-    ...Object.values(state.conveyors).map((c) => c.position),
-    ...Object.values(state.machines).map((m) => m.position),
-  ];
-
   let refund = 0;
   const events: SimEvent[] = [];
-  for (const pos of positions) {
-    const result = erase(state, pos);
-    if (result.ok) {
-      refund += result.refund;
-      events.push(...result.events);
+  while (Object.keys(state.conveyors).length > 0 || Object.keys(state.machines).length > 0) {
+    const positions = [
+      ...Object.values(state.conveyors).map((c) => c.position),
+      ...Object.values(state.machines).map((m) => m.position),
+    ];
+    for (const pos of positions) {
+      const result = erase(state, pos);
+      if (result.ok) {
+        refund += result.refund;
+        events.push(...result.events);
+      }
     }
   }
   return { refund, events };

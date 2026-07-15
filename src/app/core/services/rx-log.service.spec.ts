@@ -77,7 +77,7 @@ describe('RxLogService', () => {
     engine.toggleSubscribe(firstSourceId(engine));
     expect(log.code()).toContain('.subscribe(');
 
-    engine.place({ type: 'conveyor', direction: 'east' }, { x: 5, y: 5 });
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 5, y: 1 });
 
     expect(log.code()).not.toContain('.subscribe(');
     expect(log.code()).toContain('const carbon$ = from(');
