@@ -80,6 +80,10 @@ export function hasDrainingExhaustedSource(state: SimState): boolean {
   );
 }
 
+function anySourceSubscribed(state: SimState): boolean {
+  return Object.values(state.sources).some((source) => source.subscribed);
+}
+
 export const MILESTONES: readonly MilestoneDef[] = [
   {
     id: 'welcome',
@@ -136,8 +140,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     body: 'Click it again to .subscribe() — nothing flows until you do.',
     isTriggered: () => true,
     anchor: sourceAnchor(),
-    autoCompleteWhen: ({ state }) =>
-      Object.values(state.sources).some((source) => source.subscribed),
+    autoCompleteWhen: ({ state }) => anySourceSubscribed(state),
   },
   {
     id: 'flowing',
@@ -170,11 +173,23 @@ export const MILESTONES: readonly MilestoneDef[] = [
       hasLeakedBefore && !hasDrainingExhaustedSource(state),
   },
   {
-    id: 'map-placed',
-    title: 'Transform it',
-    body: 'map applies a recipe to every packet that passes through — the first RxJS operator.',
-    isTriggered: ({ state }) => Object.values(state.machines).some((m) => m.kind === 'map'),
+    id: 'map-unlocked',
+    title: 'Try an operator',
+    body: 'You can afford map now — select it to transform packets mid-flight.',
+    isTriggered: ({ state }) =>
+      !anySourceSubscribed(state) &&
+      everAffordable(state.economy.peakCash, buildCost({ type: 'machine', kind: 'map' })),
     anchor: domAnchor('[data-coachmark="tool-map"]'),
+    autoCompleteWhen: ({ tool }) => tool === 'map',
+    ephemeral: true,
+  },
+  {
+    id: 'map-placed-on-pipe',
+    title: 'Drop it on a pipe',
+    body: 'Place map directly onto an existing pipe — it slots in without breaking the connection.',
+    isTriggered: ({ tool }) => tool === 'map',
+    anchor: { kind: 'none' },
+    autoCompleteWhen: ({ state }) => Object.values(state.machines).some((m) => m.kind === 'map'),
   },
   {
     id: 'filter-placed',
@@ -211,7 +226,9 @@ export const SETUP_GROUP = [
 /** The sim clock stays frozen (see `SimClockService`) until this milestone is fully complete. */
 export const SETUP_HALLMARK_ID = SETUP_GROUP[SETUP_GROUP.length - 1];
 
-export const MILESTONE_GROUPS: readonly (readonly string[])[] = [SETUP_GROUP];
+export const MAP_INTRO_GROUP = ['map-unlocked', 'map-placed-on-pipe'] as const;
+
+export const MILESTONE_GROUPS: readonly (readonly string[])[] = [SETUP_GROUP, MAP_INTRO_GROUP];
 
 export function groupContaining(id: string): readonly string[] | null {
   return MILESTONE_GROUPS.find((group) => group.includes(id)) ?? null;

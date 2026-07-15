@@ -133,6 +133,70 @@ describe('OnboardingService', () => {
     expect(onboarding.active()?.id).not.toBe('force-unsubscribe');
   });
 
+  it('proactively suggests map once it is affordable and nothing is subscribed, then forces it onto a pipe', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const tools = TestBed.inject(BuildToolService);
+    const engine = TestBed.inject(SimEngineService);
+    onboarding.dismiss('flowing');
+    const sourceId = Object.values(engine.state().sources)[0].id;
+    const sourcePos = STAGE1_MINES[0].position;
+
+    engine.toggleSubscribe(sourceId);
+    engine.state().economy.cash = 500;
+    engine.state().economy.peakCash = 500;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
+    TestBed.flushEffects();
+    expect(onboarding.active()?.id).toBe('map-unlocked');
+
+    tools.select('map');
+    TestBed.flushEffects();
+    expect(onboarding.active()?.id).toBe('map-placed-on-pipe');
+
+    engine.place({ type: 'machine', kind: 'map' }, { x: sourcePos.x + 1, y: sourcePos.y });
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).not.toBe('map-placed-on-pipe');
+    expect(loadSeenIds().has('map-placed-on-pipe')).toBe(true);
+  });
+
+  it('does not let "drop it on a pipe" jump ahead of "try an operator" when a source gets resubscribed', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const engine = TestBed.inject(SimEngineService);
+    onboarding.dismiss('flowing');
+    const sourceId = Object.values(engine.state().sources)[0].id;
+
+    engine.toggleSubscribe(sourceId);
+    engine.state().economy.cash = 500;
+    engine.state().economy.peakCash = 500;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
+    TestBed.flushEffects();
+    expect(onboarding.active()?.id).toBe('map-unlocked');
+
+    engine.toggleSubscribe(sourceId);
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).not.toBe('map-placed-on-pipe');
+  });
+
+  it('does not suggest map while a source is still actively subscribed', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const engine = TestBed.inject(SimEngineService);
+    onboarding.dismiss('flowing');
+
+    engine.state().economy.cash = 500;
+    engine.state().economy.peakCash = 500;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).not.toBe('map-unlocked');
+  });
+
   it("omits milestones that haven't triggered yet from the log", () => {
     const onboarding = TestBed.inject(OnboardingService);
 
