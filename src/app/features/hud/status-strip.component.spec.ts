@@ -5,6 +5,7 @@ import { BuildToolService } from '../../core/services/build-tool.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import type { MineSpec } from '../../../sim/core/entities';
 
 function placeMachine(engine: SimEngineService, kind: 'map' | 'filter' | 'take') {
   engine.state().economy.cash = 500;
@@ -52,7 +53,12 @@ describe('StatusStripComponent', () => {
 
   it('labels a mixed-material slot "Spring" and breaks down every material', () => {
     const ui = TestBed.inject(UiStateService);
-    const spring = STAGE1_MINES[1];
+    const engine = TestBed.inject(SimEngineService);
+    const spring: MineSpec = {
+      position: { x: 6, y: 6 },
+      sequence: ['ice', 'ice', 'ice', 'slag', 'slag'],
+    };
+    engine.state().mines.push(spring);
     ui.hoveredPos.set(spring.position);
     const fixture = TestBed.createComponent(StatusStripComponent);
     fixture.detectChanges();

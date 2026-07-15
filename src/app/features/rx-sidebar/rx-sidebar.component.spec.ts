@@ -28,7 +28,7 @@ describe('RxSidebarComponent', () => {
     const pre = () => fixture.nativeElement.querySelector('pre') as HTMLElement;
 
     engine.state().economy.cash = 100;
-    engine.place({ type: 'source' }, STAGE1_MINES[1].position);
+    engine.place({ type: 'source' }, STAGE1_MINES[0].position);
     fixture.detectChanges();
 
     expect(pre().textContent).toContain('from(');

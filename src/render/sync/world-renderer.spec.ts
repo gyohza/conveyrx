@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { GameTextures } from '../sprites/game-textures';
 import { CELL_SIZE, TICK_MS, WorldRenderer, cellCenter, craterField } from './world-renderer';
 import { STAGE1_MINES, createStage1State } from '../../sim/content/stage1-layout';
+import type { MineSpec } from '../../sim/core/entities';
 import { MATERIALS, countMaterials } from '../../sim/content/materials';
 import { place } from '../../sim/core/editing';
 import { toggleSubscribe } from '../../sim/core/subscription';
@@ -113,11 +114,15 @@ describe('WorldRenderer', () => {
 
     it('shows a lettered packet icon and count for each material a mine yields', () => {
       const { renderer } = buildRenderer();
-      const state = createStage1State();
+      const state = emptyState();
+      const spring: MineSpec = {
+        position: { x: 2, y: 2 },
+        sequence: ['ice', 'ice', 'ice', 'slag', 'slag'],
+      };
+      state.mines.push(spring);
 
       renderer.buildStatic(state);
 
-      const spring = STAGE1_MINES.find((mine) => new Set(mine.sequence).size > 1)!;
       const counts = countMaterials(spring.sequence);
 
       const labels = labelsIn(renderer.entityLayer);
@@ -131,11 +136,15 @@ describe('WorldRenderer', () => {
 
     it('stacks a mine yield into one row per distinct material', () => {
       const { renderer } = buildRenderer();
-      const state = createStage1State();
+      const state = emptyState();
+      const spring: MineSpec = {
+        position: { x: 2, y: 2 },
+        sequence: ['ice', 'ice', 'ice', 'slag', 'slag'],
+      };
+      state.mines.push(spring);
 
       renderer.buildStatic(state);
 
-      const spring = STAGE1_MINES.find((mine) => new Set(mine.sequence).size > 1)!;
       const counts = countMaterials(spring.sequence);
       const springCenter = cellCenter(spring.position);
       const badgeYs = renderer.entityLayer.children
