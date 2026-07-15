@@ -121,7 +121,7 @@ describe('subscribeStatement / unsubscribeStatement', () => {
 
     const line = subscribeStatement(state, source, 'carbon$', 'sub', true);
 
-    expect(line).toBe('let sub = carbon$.subscribe(value => lunarBase.sell(value));');
+    expect(line).toBe('let sub = carbon$.subscribe(value => subscriber.sell(value));');
   });
 
   it('reassigns without `let` on subsequent subscriptions', () => {

@@ -37,7 +37,7 @@ function operatorFor(machine: MachineEntity): string {
 }
 
 function sinkConsumer(sink: SinkEntity): string {
-  return sink.sinkType === 'cash' ? 'lunarBase.sell(value)' : 'research(value)';
+  return sink.sinkType === 'cash' ? 'subscriber.sell(value)' : 'research(value)';
 }
 
 function sourceVarBase(sequence: MaterialId[]): string {

@@ -491,7 +491,7 @@ export class WorldRenderer {
     this.glowLayer.addChild(glow);
     this.baseGlow = glow;
 
-    const label = makeLabel('base', 11, BASE_WALL, true);
+    const label = makeLabel('subscriber', 11, BASE_WALL, true);
     label.position.set(x0 + width / 2, y0 - 9);
     this.gridLayer.addChild(label);
   }

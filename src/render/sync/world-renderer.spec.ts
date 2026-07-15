@@ -91,7 +91,7 @@ describe('WorldRenderer', () => {
 
       renderer.buildStatic(state);
 
-      expect(labelsIn(renderer.gridLayer)).toContain('base');
+      expect(labelsIn(renderer.gridLayer)).toContain('subscriber');
     });
 
     it('numbers every base cell in reading order, with the sell tile landing on its actual slot', () => {
