@@ -109,6 +109,30 @@ describe('OnboardingService', () => {
     expect(onboarding.active()?.id).not.toBe('force-unsubscribe');
   });
 
+  it('shows "unsubscribe it" only once, even if the same drained source leaks again later', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const engine = TestBed.inject(SimEngineService);
+    onboarding.dismiss('flowing');
+    const sourceId = Object.values(engine.state().sources)[0].id;
+    engine.state().sources[sourceId].cursor = engine.state().sources[sourceId].sequence.length;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
+    TestBed.flushEffects();
+    expect(onboarding.active()?.id).toBe('source-exhausted');
+    onboarding.dismiss('source-exhausted');
+    expect(onboarding.active()?.id).toBe('force-unsubscribe');
+
+    engine.toggleSubscribe(sourceId);
+    TestBed.flushEffects();
+    expect(loadSeenIds().has('force-unsubscribe')).toBe(true);
+
+    engine.toggleSubscribe(sourceId);
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).not.toBe('force-unsubscribe');
+  });
+
   it("omits milestones that haven't triggered yet from the log", () => {
     const onboarding = TestBed.inject(OnboardingService);
 

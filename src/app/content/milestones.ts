@@ -8,6 +8,7 @@ import type { ToolId } from '../core/services/build-tool.service';
 export interface MilestoneContext {
   state: SimState;
   tool: ToolId | null;
+  hasLeakedBefore: boolean;
 }
 
 export type MilestoneAnchor =
@@ -73,7 +74,7 @@ export function isSourceConnectedToSubscriber(state: SimState): boolean {
   return isSourceConnectedToBase(state, source);
 }
 
-function hasDrainingExhaustedSource(state: SimState): boolean {
+export function hasDrainingExhaustedSource(state: SimState): boolean {
   return Object.values(state.sources).some(
     (source) => source.subscribed && source.cursor >= source.sequence.length,
   );
@@ -165,8 +166,8 @@ export const MILESTONES: readonly MilestoneDef[] = [
     body: 'Click your source again to unsubscribe and stop the drain.',
     isTriggered: ({ state }) => hasDrainingExhaustedSource(state),
     anchor: sourceAnchor(),
-    autoCompleteWhen: ({ state }) =>
-      !Object.values(state.sources).some((source) => source.subscribed),
+    autoCompleteWhen: ({ state, hasLeakedBefore }) =>
+      hasLeakedBefore && !hasDrainingExhaustedSource(state),
   },
   {
     id: 'map-placed',
@@ -225,18 +226,14 @@ export function isGroupHallmark(id: string): boolean {
  * True once a milestone's own `autoCompleteWhen` is satisfied, OR — for an `ephemeral` grouped
  * step only — once any *later* step in the same group is satisfied (see `ephemeral`'s doc comment
  * for why non-ephemeral steps must never be skipped this way).
- *
- * `autoCompleteWhen` is only consulted once `isTriggered` is also true — some completion
- * predicates (e.g. "no subscribed sources") are vacuously true before the milestone was ever
- * reached (no source exists yet at all), and would otherwise mark it complete prematurely.
  */
 export function isMilestoneComplete(milestone: MilestoneDef, ctx: MilestoneContext): boolean {
-  if (milestone.isTriggered(ctx) && milestone.autoCompleteWhen?.(ctx)) return true;
+  if (milestone.autoCompleteWhen?.(ctx)) return true;
   if (!milestone.ephemeral) return false;
   const group = groupContaining(milestone.id);
   if (!group) return false;
   return group.slice(group.indexOf(milestone.id) + 1).some((laterId) => {
     const later = MILESTONES.find((m) => m.id === laterId);
-    return (later?.isTriggered(ctx) && later?.autoCompleteWhen?.(ctx)) ?? false;
+    return later?.autoCompleteWhen?.(ctx) ?? false;
   });
 }

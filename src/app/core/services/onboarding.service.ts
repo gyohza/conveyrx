@@ -3,6 +3,7 @@ import {
   MILESTONES,
   SETUP_HALLMARK_ID,
   groupContaining,
+  hasDrainingExhaustedSource,
   isGroupHallmark,
   isMilestoneComplete,
 } from '../../content/milestones';
@@ -22,10 +23,12 @@ export class OnboardingService {
   private readonly engine = inject(SimEngineService);
   private readonly tools = inject(BuildToolService);
   private readonly seenSignal = signal<Set<string>>(loadSeenIds());
+  private readonly hasLeaked = signal(false);
 
   readonly context = computed<MilestoneContext>(() => ({
     state: this.engine.state(),
     tool: this.tools.tool(),
+    hasLeakedBefore: this.hasLeaked(),
   }));
 
   private readonly pending = computed<MilestoneDef[]>(() => {
@@ -49,6 +52,9 @@ export class OnboardingService {
   });
 
   constructor() {
+    effect(() => {
+      if (hasDrainingExhaustedSource(this.engine.state())) this.hasLeaked.set(true);
+    });
     effect(() => {
       const ctx = this.context();
       const seen = this.seenSignal();
