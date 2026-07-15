@@ -3,6 +3,7 @@
 [![Release](https://github.com/gyohza/conveyrx/actions/workflows/release.yml/badge.svg)](https://github.com/gyohza/conveyrx/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/package-json/v/gyohza/conveyrx)](https://github.com/gyohza/conveyrx/releases)
 [![Play](https://img.shields.io/badge/play-rx.gyohza.dev-38bdf8)](https://rx.gyohza.dev)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
 A browser game about running an automated mineral-extraction rig on a carbon-rich asteroid, that teaches
 [RxJS](https://rxjs.dev) by turning its operators into buildable machines. You place conveyors and
