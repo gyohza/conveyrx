@@ -79,9 +79,9 @@ Two RxJS lessons are baked into the core loop from turn one:
 given, using a recipe chosen at build time (Carbon → Diamond today). A first playthrough is normally: lay a plain
 conveyor line straight from source to sell and subscribe to get cash flowing, then swap a cell for the `map`
 machine once you can afford it to start selling the refined (much more valuable) material instead of raw ore.
-Later stages introduce more operators (`filter`, `scan`, `debounceTime`, `combineLatest`, `switchMap`, …) as new
-machine types and `interval` as a third source kind, each built to mirror the real operator's semantics — see the
-project plan for the full progression.
+Later stages introduce more operators (`scan`, `debounceTime`, `combineLatest`, `switchMap`, …) as new machine
+types and `interval` as a third source kind, each built to mirror the real operator's semantics — see
+[ROADMAP.md](./ROADMAP.md) for the full progression.
 
 ## Project structure (developer's perspective)
 
