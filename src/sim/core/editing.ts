@@ -1,4 +1,4 @@
-import { CONVEYOR_COST, FILTER_COST, SOURCE_COST, takeCost } from '../content/economy';
+import { CONVEYOR_COST, SOURCE_COST, takeCost } from '../content/economy';
 import { MACHINE_DEFS } from '../content/machine-defs';
 import type { MaterialId } from '../content/materials';
 import { RECIPES } from '../content/recipes';
@@ -53,7 +53,7 @@ export type EraseResult =
 function defaultMachineCost(kind: MachineKind): number {
   if (kind === 'map') return RECIPES[MACHINE_DEFS.map.availableRecipes![0]].cost;
   if (kind === 'take') return takeCost(MACHINE_DEFS.take.availableCounts![0]);
-  return FILTER_COST;
+  return MACHINE_DEFS[kind].cost!;
 }
 
 export function buildCost(request: BuildRequest): number {
@@ -65,13 +65,13 @@ export function buildCost(request: BuildRequest): number {
 export function machineCost(machine: MachineEntity): number {
   if (machine.kind === 'map') return RECIPES[machine.config.recipeId].cost;
   if (machine.kind === 'take') return takeCost(machine.config.count);
-  return FILTER_COST;
+  return MACHINE_DEFS[machine.kind].cost!;
 }
 
 function configCost(update: ConfigUpdate): number {
   if (update.kind === 'map') return RECIPES[update.recipeId].cost;
   if (update.kind === 'take') return takeCost(update.count);
-  return FILTER_COST;
+  return MACHINE_DEFS[update.kind].cost!;
 }
 
 export function reconfigureMachine(
