@@ -46,4 +46,30 @@ describe('SimClockService', () => {
 
     expect(tickSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('does not tick the engine while paused', () => {
+    const engine = TestBed.inject(SimEngineService);
+    const tickSpy = vi.spyOn(engine, 'tick');
+    const clock = TestBed.inject(SimClockService);
+    clock.paused.set(true);
+
+    clock.start();
+    vi.advanceTimersByTime(TICK_INTERVAL_MS * 3);
+
+    expect(tickSpy).not.toHaveBeenCalled();
+  });
+
+  it('resumes ticking once unpaused', () => {
+    const engine = TestBed.inject(SimEngineService);
+    const tickSpy = vi.spyOn(engine, 'tick');
+    const clock = TestBed.inject(SimClockService);
+    clock.paused.set(true);
+    clock.start();
+    vi.advanceTimersByTime(TICK_INTERVAL_MS * 2);
+
+    clock.paused.set(false);
+    vi.advanceTimersByTime(TICK_INTERVAL_MS * 2);
+
+    expect(tickSpy).toHaveBeenCalledTimes(2);
+  });
 });

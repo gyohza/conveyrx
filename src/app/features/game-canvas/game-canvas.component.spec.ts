@@ -2,13 +2,21 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameCanvasComponent } from './game-canvas.component';
 import { BuildToolService } from '../../core/services/build-tool.service';
+import { GameViewportService } from '../../core/services/game-viewport.service';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { PixiAppFactory } from '../../core/services/pixi-app-factory.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { TileThumbnailService } from '../../core/services/tile-thumbnail.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import type { InteractionHandlers } from '../../../render/pixi-app';
+import { SETUP_HALLMARK_ID } from '../../content/milestones';
 import { SOURCE_COST } from '../../../sim/content/economy';
 import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+
+/** Fast-forwards past the scripted onboarding arc, as if the player had already completed it. */
+function completeOnboardingSetup(): void {
+  TestBed.inject(OnboardingService).dismiss(SETUP_HALLMARK_ID);
+}
 
 function buildFakeApp() {
   const handlers: { current?: InteractionHandlers } = {};
@@ -29,6 +37,7 @@ function buildFakeApp() {
         source: 'data:source',
       }),
       setInteractionHandlers: vi.fn((h: InteractionHandlers) => (handlers.current = h)),
+      gridCellRect: vi.fn().mockReturnValue(null),
       destroy: vi.fn(),
     },
   };
@@ -64,6 +73,19 @@ describe('GameCanvasComponent', () => {
 
     expect(create).toHaveBeenCalledTimes(1);
     expect(create.mock.calls[0][0]).toBeInstanceOf(HTMLElement);
+  });
+
+  it('registers the mounted app with GameViewportService, and clears it on destroy', async () => {
+    const { fixture, app } = await mount();
+    const viewport = TestBed.inject(GameViewportService);
+    const rect = new DOMRect(1, 2, 3, 4);
+    app.gridCellRect.mockReturnValue(rect);
+
+    expect(viewport.gridCellRect({ x: 0, y: 0 })).toBe(rect);
+
+    fixture.destroy();
+
+    expect(viewport.gridCellRect({ x: 0, y: 0 })).toBeNull();
   });
 
   it('publishes extracted tile thumbnails once mounted', async () => {
@@ -141,11 +163,24 @@ describe('GameCanvasComponent', () => {
     const engine = TestBed.inject(SimEngineService);
     engine.state().economy.cash = 100;
     engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+    completeOnboardingSetup();
     const sourceId = Number(Object.keys(engine.state().sources)[0]);
 
     handlers.current!.onSourceClick(sourceId);
 
     expect(engine.state().sources[sourceId].subscribed).toBe(true);
+  });
+
+  it('refuses to subscribe a source clicked before it is actually wired to the Subscriber, during onboarding', async () => {
+    const { handlers } = await mount();
+    const engine = TestBed.inject(SimEngineService);
+    engine.state().economy.cash = 100;
+    engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+    const sourceId = Number(Object.keys(engine.state().sources)[0]);
+
+    handlers.current!.onSourceClick(sourceId);
+
+    expect(engine.state().sources[sourceId].subscribed).toBe(false);
   });
 
   it('erases the source instead of toggling it, when clicked with the erase tool active', async () => {
@@ -154,6 +189,7 @@ describe('GameCanvasComponent', () => {
     const engine = TestBed.inject(SimEngineService);
     engine.state().economy.cash = 100;
     engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+    completeOnboardingSetup();
     const sourceId = Number(Object.keys(engine.state().sources)[0]);
     const cashAfterBuilding = engine.state().economy.cash;
     tools.select('erase');
@@ -162,6 +198,39 @@ describe('GameCanvasComponent', () => {
 
     expect(Object.keys(engine.state().sources)).toHaveLength(0);
     expect(engine.state().economy.cash).toBe(cashAfterBuilding + SOURCE_COST);
+  });
+
+  it('refuses to erase the source (via click or paint) while onboarding setup is still in progress', async () => {
+    const { handlers } = await mount();
+    const tools = TestBed.inject(BuildToolService);
+    const engine = TestBed.inject(SimEngineService);
+    engine.state().economy.cash = 100;
+    engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+    const sourceId = Number(Object.keys(engine.state().sources)[0]);
+    const sourcePos = engine.state().sources[sourceId].position;
+    tools.select('erase');
+
+    handlers.current!.onSourceClick(sourceId);
+    expect(Object.keys(engine.state().sources)).toHaveLength(1);
+
+    handlers.current!.onPaint(sourcePos, null, null);
+    expect(Object.keys(engine.state().sources)).toHaveLength(1);
+  });
+
+  it('erases the source once onboarding setup has completed', async () => {
+    const { handlers } = await mount();
+    const tools = TestBed.inject(BuildToolService);
+    const engine = TestBed.inject(SimEngineService);
+    engine.state().economy.cash = 100;
+    engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+    completeOnboardingSetup();
+    const sourceId = Number(Object.keys(engine.state().sources)[0]);
+    const sourcePos = engine.state().sources[sourceId].position;
+    tools.select('erase');
+
+    handlers.current!.onPaint(sourcePos, null, null);
+
+    expect(Object.keys(engine.state().sources)).toHaveLength(0);
   });
 
   it('places a conveyor facing the drag direction when one is given, ignoring adjacency', async () => {
@@ -313,6 +382,18 @@ describe('GameCanvasComponent', () => {
     fixture.destroy();
 
     expect(app.destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('delegates isInteractionAllowed to OnboardingService, so a spotlighted coach-mark can lock out the rest of the map', async () => {
+    const { handlers } = await mount();
+    const onboarding = TestBed.inject(OnboardingService);
+
+    expect(handlers.current!.isInteractionAllowed(STAGE1_MINES[0].position)).toBe(
+      onboarding.isMapInteractionAllowed(STAGE1_MINES[0].position),
+    );
+    expect(handlers.current!.isInteractionAllowed({ x: 9, y: 9 })).toBe(
+      onboarding.isMapInteractionAllowed({ x: 9, y: 9 }),
+    );
   });
 
   it('destroys a PixiGameApp that resolves only after the component was already destroyed', async () => {

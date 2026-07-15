@@ -55,7 +55,7 @@ export function createStage1State(): SimState {
       position: { ...mine.position },
       sequence: [...mine.sequence],
     })),
-    economy: { cash: START_CASH, research: 0, peakCash: START_CASH },
+    economy: { cash: START_CASH, research: 0, peakCash: START_CASH, saleCount: 0 },
     evalOrder: [],
     base: seedBaseRect(STAGE1_SINK_POS, STAGE1_GRID),
   };

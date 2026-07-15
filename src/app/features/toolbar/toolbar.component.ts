@@ -3,8 +3,11 @@ import { CONVEYOR_COST, SOURCE_COST, everAffordable } from '../../../sim/content
 import { MACHINE_DEFS } from '../../../sim/content/machine-defs';
 import { SOURCE_KINDS } from '../../../sim/content/source-kinds';
 import { buildCost } from '../../../sim/core/editing';
+import { findEntityAt } from '../../../sim/core/grid';
+import type { GridPos } from '../../../sim/core/types';
 import { BuildToolService } from '../../core/services/build-tool.service';
 import type { ToolId } from '../../core/services/build-tool.service';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { TileThumbnailService } from '../../core/services/tile-thumbnail.service';
 import type { ThumbnailKey } from '../../core/services/tile-thumbnail.service';
@@ -41,6 +44,7 @@ const HEADER_CLASSES =
       <section [class]="SECTION_CLASSES">
         @for (button of toolButtons(); track button.id) {
           <app-tool-button
+            [id]="button.id"
             [label]="button.label"
             [detail]="button.detail"
             [cost]="button.cost"
@@ -59,6 +63,7 @@ const HEADER_CLASSES =
       <section [class]="SECTION_CLASSES">
         @for (button of streamButtons(); track button.id) {
           <app-tool-button
+            [id]="button.id"
             [label]="button.label"
             [detail]="button.detail"
             [cost]="button.cost"
@@ -78,6 +83,7 @@ const HEADER_CLASSES =
       <section [class]="SECTION_CLASSES">
         @for (button of creationButtons(); track button.id) {
           <app-tool-button
+            [id]="button.id"
             [label]="button.label"
             [detail]="button.detail"
             [cost]="button.cost"
@@ -98,6 +104,7 @@ const HEADER_CLASSES =
       <section [class]="SECTION_CLASSES">
         @for (button of operatorButtons(); track button.id) {
           <app-tool-button
+            [id]="button.id"
             [label]="button.label"
             [detail]="button.detail"
             [cost]="button.cost"
@@ -121,6 +128,7 @@ export class ToolbarComponent {
   protected readonly tools = inject(BuildToolService);
   private readonly thumbnails = inject(TileThumbnailService);
   private readonly engine = inject(SimEngineService);
+  private readonly onboarding = inject(OnboardingService);
   protected readonly SECTION_CLASSES = SECTION_CLASSES;
   protected readonly DIVIDER_CLASSES = DIVIDER_CLASSES;
   protected readonly HEADER_CLASSES = HEADER_CLASSES;
@@ -200,6 +208,12 @@ export class ToolbarComponent {
     else this.tools.select(id);
   }
 
+  /** The source is fixed in place while the scripted onboarding setup arc is still in progress. */
+  private canErase(pos: GridPos): boolean {
+    const kind = findEntityAt(this.engine.state(), pos)?.kind;
+    return kind !== 'source' || this.onboarding.canEraseSource();
+  }
+
   protected onKeydown(event: KeyboardEvent): void {
     if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
     const target = event.target as HTMLElement | null;
@@ -214,7 +228,7 @@ export class ToolbarComponent {
       case 'delete':
       case 'backspace': {
         const pos = this.tools.selectedCell();
-        if (pos) {
+        if (pos && this.canErase(pos)) {
           event.preventDefault();
           this.engine.erase(pos);
           this.tools.selectCell(null);

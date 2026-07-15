@@ -2,7 +2,10 @@ import { Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-tool-button',
-  host: { class: 'landscape:block landscape:w-full' },
+  host: {
+    class: 'landscape:block landscape:w-full',
+    '[attr.data-coachmark]': 'id() && "tool-" + id()',
+  },
   template: `
     <div
       class="flex min-w-36 shrink-0 flex-col overflow-hidden rounded-lg border transition-colors landscape:w-full"
@@ -76,6 +79,7 @@ import { Component, input, output } from '@angular/core';
   `,
 })
 export class ToolButtonComponent {
+  readonly id = input<string | null>(null);
   readonly label = input.required<string>();
   readonly detail = input.required<string>();
   readonly tooltip = input<string | undefined>(undefined);

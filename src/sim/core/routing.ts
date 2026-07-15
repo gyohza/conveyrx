@@ -160,6 +160,48 @@ export function isBasePowered(state: SimState): boolean {
   return entry !== undefined && poweredConveyors(state).has(entry.id);
 }
 
+/**
+ * Whether a physical conveyor path exists all the way from `source` to the base's entry point —
+ * independent of subscription state, unlike {@link isBasePowered}. Packets reach the sink through
+ * a dedicated entry conveyor (see `base.ts`'s `findBaseEntryConveyor`), not by literally landing on
+ * the sink's own grid cell, so this can't just check whether the chain's terminal entity is a sink.
+ */
+export function isSourceConnectedToBase(state: SimState, source: SourceEntity): boolean {
+  const entry = findBaseEntryConveyor(state);
+  if (!entry) return false;
+  const { outSide } = machinePorts(state, source.position);
+  if (!outSide) return false;
+
+  let pos = source.position;
+  let dir = outSide;
+  const visited = new Set<string>();
+  for (let guard = 0; guard < 1000; guard++) {
+    const nextPos = translate(pos, dir);
+    const target = findEntityAt(state, nextPos);
+    if (!target) return false;
+    if (target.kind === 'conveyor' && target.id === entry.id) return true;
+
+    const key = `${target.kind}:${target.id}`;
+    if (visited.has(key)) return false;
+    visited.add(key);
+
+    if (target.kind === 'conveyor') {
+      const conveyor = state.conveyors[target.id];
+      pos = conveyor.position;
+      dir = conveyor.direction;
+    } else if (target.kind === 'machine') {
+      const machine = state.machines[target.id];
+      const ports = machinePorts(state, machine.position);
+      if (!ports.outSide) return false;
+      pos = machine.position;
+      dir = ports.outSide;
+    } else {
+      return false;
+    }
+  }
+  return false;
+}
+
 export interface SourceChain {
   machines: MachineEntity[];
   sink: SinkEntity | null;

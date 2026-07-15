@@ -9,12 +9,15 @@ import {
 } from '@angular/core';
 import type { Subscription } from 'rxjs';
 import { BuildToolService } from '../../core/services/build-tool.service';
+import { GameViewportService } from '../../core/services/game-viewport.service';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { PixiAppFactory } from '../../core/services/pixi-app-factory.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { TileThumbnailService } from '../../core/services/tile-thumbnail.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import type { PixiGameApp } from '../../../render/pixi-app';
 import type { Preview } from '../../../render/sync/world-renderer';
+import { findEntityAt } from '../../../sim/core/grid';
 import { feederDirection, inferConveyorDirection } from '../../../sim/core/routing';
 import type { Direction, GridPos } from '../../../sim/core/types';
 
@@ -31,7 +34,9 @@ export class GameCanvasComponent {
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('host');
   private readonly engine = inject(SimEngineService);
   private readonly tools = inject(BuildToolService);
+  private readonly onboarding = inject(OnboardingService);
   private readonly pixiAppFactory = inject(PixiAppFactory);
+  private readonly viewport = inject(GameViewportService);
   private readonly thumbnails = inject(TileThumbnailService);
   private readonly ui = inject(UiStateService);
   private pixiApp?: PixiGameApp;
@@ -64,6 +69,7 @@ export class GameCanvasComponent {
       return;
     }
     this.pixiApp = app;
+    this.viewport.register(app);
     app.setInteractionHandlers({
       onHover: (pos) => {
         this.hoveredCell = pos;
@@ -81,13 +87,14 @@ export class GameCanvasComponent {
       onSourceClick: (sourceId) => {
         if (this.tools.tool() === 'erase') {
           const position = this.engine.state().sources[sourceId]?.position;
-          if (position) this.engine.erase(position);
+          if (position && this.canEraseAt(position)) this.engine.erase(position);
           return;
         }
-        this.engine.toggleSubscribe(sourceId);
+        if (this.onboarding.canSubscribe(sourceId)) this.engine.toggleSubscribe(sourceId);
       },
       onBaseEdgeDrag: (edge, direction) => this.engine.resizeBaseEdge(edge, direction),
       isClickable: (pos) => this.isClickable(pos),
+      isInteractionAllowed: (pos) => this.onboarding.isMapInteractionAllowed(pos),
     });
     this.subscriptions.push(
       this.engine.events.subscribe((events) => app.applyEvents(this.engine.state(), events)),
@@ -115,13 +122,13 @@ export class GameCanvasComponent {
   ): void {
     const tool = this.tools.tool();
     if (tool === null) {
-      const selected = this.engine.canErase(pos) ? pos : null;
+      const selected = this.canEraseAt(pos) ? pos : null;
       this.tools.selectCell(selected);
       this.pixiApp?.setSelection(selected);
       return;
     }
     if (tool === 'erase') {
-      this.engine.erase(pos);
+      if (this.canEraseAt(pos)) this.engine.erase(pos);
       return;
     }
     if (tool === 'conveyor') {
@@ -137,7 +144,17 @@ export class GameCanvasComponent {
   }
 
   private isClickable(pos: GridPos): boolean {
-    return this.tools.tool() === null ? this.engine.canErase(pos) : true;
+    return this.tools.tool() === null ? this.canEraseAt(pos) : true;
+  }
+
+  /**
+   * The player must not delete the source out from under themselves mid-way through the scripted
+   * onboarding arc — several coach-marks anchor to it and its pipe connection by grid position.
+   */
+  private canEraseAt(pos: GridPos): boolean {
+    if (!this.engine.canErase(pos)) return false;
+    const kind = findEntityAt(this.engine.state(), pos)?.kind;
+    return kind !== 'source' || this.onboarding.canEraseSource();
   }
 
   private refreshPreview(): void {
@@ -150,7 +167,7 @@ export class GameCanvasComponent {
     if (!pos) return null;
     const tool = this.tools.tool();
     if (tool === null) return { kind: 'hover', pos };
-    if (tool === 'erase') return { kind: 'erase', pos, valid: this.engine.canErase(pos) };
+    if (tool === 'erase') return { kind: 'erase', pos, valid: this.canEraseAt(pos) };
     if (tool === 'conveyor') {
       const state = this.engine.state();
       const feeder = this.activeDragDirection ?? feederDirection(state, pos);
@@ -178,6 +195,7 @@ export class GameCanvasComponent {
   private teardown(): void {
     this.destroyed = true;
     this.subscriptions.forEach((s) => s.unsubscribe());
+    this.viewport.clear();
     this.pixiApp?.destroy();
   }
 }

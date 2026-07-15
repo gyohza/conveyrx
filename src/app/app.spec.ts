@@ -42,7 +42,7 @@ describe('App', () => {
     expect(startSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('renders the full game shell: top bar, canvas, toolbar, and the welcome dialog', () => {
+  it('renders the full game shell: top bar, canvas, toolbar, and the first coach-mark', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
@@ -50,17 +50,17 @@ describe('App', () => {
     expect(compiled.querySelector('app-top-bar')).toBeTruthy();
     expect(compiled.querySelector('app-game-canvas')).toBeTruthy();
     expect(compiled.querySelector('app-toolbar')).toBeTruthy();
-    expect(compiled.querySelector('app-help-dialog')).toBeTruthy();
+    expect(compiled.querySelector('app-coach-mark')).toBeTruthy();
   });
 
-  it('hides the welcome dialog once dismissed', () => {
+  it('shows the tutorial log once opened', () => {
     const ui = TestBed.inject(UiStateService);
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
-    ui.helpOpen.set(false);
+    ui.tutorialLogOpen.set(true);
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('app-help-dialog')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-tutorial-log')).toBeTruthy();
   });
 });

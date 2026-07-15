@@ -20,9 +20,10 @@ describe('stepSink', () => {
       { type: 'packetDespawned', packetId: carbon.id },
       { type: 'packetDespawned', packetId: diamond.id },
     ]);
+    expect(state.economy.saleCount).toBe(2);
   });
 
-  it('routes packets to research instead of cash for a research sink', () => {
+  it('routes packets to research instead of cash for a research sink, without counting it as a sale', () => {
     const state = emptyState();
     const sink = addSink(state, { x: 0, y: 0 }, { sinkType: 'research' });
     sink.input.queue.push(addPacket(state, 'diamond').id);
@@ -31,6 +32,7 @@ describe('stepSink', () => {
 
     expect(state.economy.research).toBe(MATERIALS.diamond.sellPrice);
     expect(state.economy.cash).toBe(100);
+    expect(state.economy.saleCount).toBe(0);
   });
 
   it('does nothing when the input port is empty', () => {

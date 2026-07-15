@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 
@@ -16,6 +17,7 @@ import { UiStateService } from '../../core/services/ui-state.service';
       </div>
       <div class="flex items-center gap-3">
         <output
+          data-coachmark="cash-readout"
           class="rounded-md border border-emerald-800/60 bg-emerald-950/60 px-3 py-1 font-mono text-sm font-semibold text-emerald-300"
           aria-live="polite"
           aria-label="Cash"
@@ -66,9 +68,9 @@ import { UiStateService } from '../../core/services/ui-state.service';
         <button
           type="button"
           class="cursor-pointer rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-sm text-slate-200 hover:bg-slate-700"
-          (click)="ui.helpOpen.set(true)"
+          (click)="ui.tutorialLogOpen.set(true)"
         >
-          How to play
+          Tutorials
         </button>
       </div>
     </header>
@@ -79,6 +81,7 @@ import { UiStateService } from '../../core/services/ui-state.service';
 })
 export class TopBarComponent {
   protected readonly engine = inject(SimEngineService);
+  protected readonly onboarding = inject(OnboardingService);
   protected readonly ui = inject(UiStateService);
   protected readonly cash = computed(() => this.engine.state().economy.cash);
 
@@ -103,6 +106,7 @@ export class TopBarComponent {
   protected reset(): void {
     if (window.confirm('Reset the whole game? This restores your starting cash and layout.')) {
       this.engine.resetGame();
+      this.onboarding.reset();
     }
   }
 }

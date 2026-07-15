@@ -13,6 +13,7 @@ export function stepSink(state: SimState, sink: SinkEntity): SimEvent[] {
     const amount = MATERIALS[packet.material].sellPrice;
     if (sink.sinkType === 'cash') {
       state.economy.cash += amount;
+      state.economy.saleCount += 1;
     } else {
       state.economy.research += amount;
     }

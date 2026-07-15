@@ -1,31 +1,39 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, effect, inject } from '@angular/core';
 import { GameCanvasComponent } from './features/game-canvas/game-canvas.component';
-import { HelpDialogComponent } from './features/help/help-dialog.component';
+import { CoachMarkComponent } from './features/onboarding/coach-mark.component';
+import { TutorialLogComponent } from './features/onboarding/tutorial-log.component';
 import { FooterComponent } from './features/hud/footer.component';
 import { StatusStripComponent } from './features/hud/status-strip.component';
 import { TopBarComponent } from './features/hud/top-bar.component';
 import { RxSidebarComponent } from './features/rx-sidebar/rx-sidebar.component';
 import { ToolbarComponent } from './features/toolbar/toolbar.component';
+import { OnboardingService } from './core/services/onboarding.service';
 import { SimClockService } from './core/services/sim-clock.service';
 import { UiStateService } from './core/services/ui-state.service';
 
 @Component({
   selector: 'app-root',
   imports: [
+    CoachMarkComponent,
     FooterComponent,
     GameCanvasComponent,
-    HelpDialogComponent,
     StatusStripComponent,
     RxSidebarComponent,
     ToolbarComponent,
     TopBarComponent,
+    TutorialLogComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App implements OnInit {
   private readonly clock = inject(SimClockService);
+  private readonly onboarding = inject(OnboardingService);
   protected readonly ui = inject(UiStateService);
+
+  constructor() {
+    effect(() => this.clock.paused.set(!this.onboarding.isSetupComplete()));
+  }
 
   ngOnInit(): void {
     this.clock.start();

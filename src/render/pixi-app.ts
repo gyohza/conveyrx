@@ -25,6 +25,14 @@ export interface InteractionHandlers {
   /** Fires once per grid-line the pointer crosses while dragging a base wall, instead of `onPaint`. */
   onBaseEdgeDrag(edge: BaseEdge, direction: 1 | -1): void;
   isClickable(pos: GridPos): boolean;
+  /**
+   * A spotlighted onboarding coach-mark darkens everything outside its anchor. The darkened
+   * backdrop is a DOM overlay, so it naturally blocks `pointerdown` — but Pixi's own hover tracking
+   * listens on `document` at the capture phase (so drags can continue past the canvas edge),
+   * bypassing normal DOM stacking entirely. Without this check, the hover highlight/cursor — and a
+   * drag that started inside the spotlight — would keep reacting right through the backdrop.
+   */
+  isInteractionAllowed(pos: GridPos): boolean;
 }
 
 const WALL_HIT_TOLERANCE = 8;
@@ -119,6 +127,24 @@ export class PixiGameApp {
 
   setSelection(pos: GridPos | null): void {
     this.renderer.setSelection(pos);
+  }
+
+  gridCellRect(pos: GridPos): DOMRect | null {
+    if (pos.x < 0 || pos.y < 0 || pos.x >= this.gridSize.width || pos.y >= this.gridSize.height) {
+      return null;
+    }
+    const topLeft = this.world.toGlobal({ x: pos.x * CELL_SIZE, y: pos.y * CELL_SIZE });
+    const bottomRight = this.world.toGlobal({
+      x: (pos.x + 1) * CELL_SIZE,
+      y: (pos.y + 1) * CELL_SIZE,
+    });
+    const canvasRect = this.app.canvas.getBoundingClientRect();
+    return new DOMRect(
+      canvasRect.left + topLeft.x,
+      canvasRect.top + topLeft.y,
+      bottomRight.x - topLeft.x,
+      bottomRight.y - topLeft.y,
+    );
   }
 
   /**
@@ -240,7 +266,8 @@ export class PixiGameApp {
         this.updateBaseDrag(point);
         return;
       }
-      const pos = this.toGrid(event);
+      const rawPos = this.toGrid(event);
+      const pos = rawPos && (this.handlers?.isInteractionAllowed(rawPos) ?? true) ? rawPos : null;
       this.lastHoveredCell = pos;
       this.handlers?.onHover(pos);
       this.updateCursor(pos, this.hitWall(point));
@@ -253,7 +280,8 @@ export class PixiGameApp {
     });
     stage.on('pointerdown', (event) => {
       const point = this.toLocalPoint(event);
-      const pos = this.toGrid(event);
+      const rawPos = this.toGrid(event);
+      const pos = rawPos && (this.handlers?.isInteractionAllowed(rawPos) ?? true) ? rawPos : null;
       if (pos) {
         const sourceId = this.sourcePositions.get(cellKey(pos));
         if (sourceId !== undefined) {

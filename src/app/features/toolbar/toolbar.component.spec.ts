@@ -3,10 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ToolbarComponent } from './toolbar.component';
 import { BuildToolService } from '../../core/services/build-tool.service';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
+import { SETUP_HALLMARK_ID } from '../../content/milestones';
 import { SOURCE_COST } from '../../../sim/content/economy';
 import { RECIPES } from '../../../sim/content/recipes';
 import { SOURCE_KINDS } from '../../../sim/content/source-kinds';
+import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
 
 function pressKey(key: string): void {
   document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
@@ -212,6 +215,37 @@ describe('ToolbarComponent', () => {
       pressKey('Delete');
 
       expect(Object.values(engine.state().conveyors)).toHaveLength(0);
+      expect(tools.selectedCell()).toBeNull();
+    });
+
+    it('refuses to erase the source with Delete/Backspace while onboarding setup is still in progress', () => {
+      const tools = TestBed.inject(BuildToolService);
+      const engine = TestBed.inject(SimEngineService);
+      engine.state().economy.cash = 100;
+      engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+      tools.selectCell(STAGE1_MINES[0].position);
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      fixture.detectChanges();
+
+      pressKey('Delete');
+
+      expect(Object.values(engine.state().sources)).toHaveLength(1);
+      expect(tools.selectedCell()).toEqual(STAGE1_MINES[0].position);
+    });
+
+    it('erases the source with Delete/Backspace once onboarding setup has completed', () => {
+      const tools = TestBed.inject(BuildToolService);
+      const engine = TestBed.inject(SimEngineService);
+      engine.state().economy.cash = 100;
+      engine.place({ type: 'source' }, STAGE1_MINES[0].position);
+      TestBed.inject(OnboardingService).dismiss(SETUP_HALLMARK_ID);
+      tools.selectCell(STAGE1_MINES[0].position);
+      const fixture = TestBed.createComponent(ToolbarComponent);
+      fixture.detectChanges();
+
+      pressKey('Delete');
+
+      expect(Object.values(engine.state().sources)).toHaveLength(0);
       expect(tools.selectedCell()).toBeNull();
     });
 

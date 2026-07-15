@@ -30,7 +30,7 @@ export function emptyState(width = 8, height = 4, cash = 100): SimState {
     sinks: {},
     packets: {},
     mines: [],
-    economy: { cash, research: 0, peakCash: cash },
+    economy: { cash, research: 0, peakCash: cash, saleCount: 0 },
     evalOrder: [],
     base: { min: { x: 0, y: 0 }, max: { x: 0, y: 0 } },
   };

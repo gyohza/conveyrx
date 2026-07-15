@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TopBarComponent } from './top-bar.component';
+import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 import { START_CASH } from '../../../sim/content/economy';
@@ -38,22 +39,21 @@ describe('TopBarComponent', () => {
     );
   });
 
-  it('reopens the help dialog on demand', () => {
+  it('opens the tutorial log on demand', () => {
     const ui = TestBed.inject(UiStateService);
-    ui.helpOpen.set(false);
     const fixture = TestBed.createComponent(TopBarComponent);
     fixture.detectChanges();
 
-    findButton(fixture, 'How to play').click();
+    findButton(fixture, 'Tutorials').click();
 
-    expect(ui.helpOpen()).toBe(true);
+    expect(ui.tutorialLogOpen()).toBe(true);
   });
 
   it('shows a pointer cursor on its buttons', () => {
     const fixture = TestBed.createComponent(TopBarComponent);
     fixture.detectChanges();
 
-    expect(findButton(fixture, 'How to play').className).toContain('cursor-pointer');
+    expect(findButton(fixture, 'Tutorials').className).toContain('cursor-pointer');
   });
 
   describe('clear button', () => {
@@ -140,6 +140,18 @@ describe('TopBarComponent', () => {
 
       expect(Object.keys(engine.state().conveyors)).toHaveLength(0);
       expect(engine.state().economy.cash).toBe(START_CASH);
+    });
+
+    it('also resets onboarding progress once confirmed', () => {
+      const onboarding = TestBed.inject(OnboardingService);
+      const fixture = TestBed.createComponent(TopBarComponent);
+      fixture.detectChanges();
+      onboarding.dismiss('welcome');
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+      findButton(fixture, 'Reset').click();
+
+      expect(onboarding.active()?.id).toBe('welcome');
     });
 
     it('does nothing when the confirmation is declined', () => {
