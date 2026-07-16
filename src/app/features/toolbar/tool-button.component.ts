@@ -56,10 +56,10 @@ import { Component, input, output } from '@angular/core';
               >{{ hotkey() }}</span
             >
           </span>
-          <span class="block truncate text-[11px] text-slate-400">
-            {{ detail() }}
+          <span class="flex items-baseline gap-1 text-[11px] text-slate-400">
+            <span class="min-w-0 flex-1 truncate">{{ detail() }}</span>
             @if (cost() !== null) {
-              · <span class="text-emerald-400">Ƶ{{ cost() }}</span>
+              <span class="shrink-0 text-emerald-400">Ƶ{{ cost() }}</span>
             }
           </span>
         </span>

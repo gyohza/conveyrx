@@ -40,6 +40,16 @@ describe('ToolButtonComponent', () => {
     expect(text).toContain('m');
   });
 
+  it('keeps cost out of the truncated detail text so a long description never clips it', () => {
+    const fixture = TestBed.createComponent(ToolButtonComponent);
+    setInputs(fixture, { detail: 'starts a stream from an iterable', cost: 25 });
+    fixture.detectChanges();
+
+    const truncated = fixture.nativeElement.querySelector('.truncate') as HTMLElement;
+    expect(truncated.textContent?.trim()).toBe('starts a stream from an iterable');
+    expect(fixture.nativeElement.textContent).toContain('Ƶ25');
+  });
+
   it('emits picked when the main button is clicked', () => {
     const fixture = TestBed.createComponent(ToolButtonComponent);
     setInputs(fixture, {});
