@@ -1,8 +1,8 @@
-import { buildCost } from '../../sim/core/editing';
-import { isSourceConnectedToBase } from '../../sim/core/routing';
-import type { SimState } from '../../sim/core/state';
-import type { GridPos } from '../../sim/core/types';
-import { everAffordable } from '../../sim/content/economy';
+import { buildCost } from '@sim/core/editing';
+import { isSourceConnectedToBase } from '@sim/core/routing';
+import type { SimState } from '@sim/core/state';
+import type { GridPos } from '@sim/core/types';
+import { everAffordable } from '@sim/content/economy';
 import type { ToolId } from '../core/services/build-tool.service';
 
 export interface MilestoneContext {

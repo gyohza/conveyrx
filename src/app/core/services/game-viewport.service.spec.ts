@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { GameViewportService } from './game-viewport.service';
-import type { PixiGameApp } from '../../../render/pixi-app';
+import type { PixiGameApp } from '@render/pixi-app';
 
 describe('GameViewportService', () => {
   it('returns null when no game app is registered', () => {

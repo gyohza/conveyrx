@@ -1,11 +1,11 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import type { FederatedPointerEvent } from 'pixi.js';
-import type { BaseEdge } from '../sim/core/base';
-import type { MachineKind } from '../sim/core/entities';
-import type { Direction, EntityId, GridRect } from '../sim/core/types';
-import type { SimEvent } from '../sim/core/events';
-import type { SimState } from '../sim/core/state';
-import type { GridPos } from '../sim/core/types';
+import type { BaseEdge } from '@sim/core/base';
+import type { MachineKind } from '@sim/core/entities';
+import type { Direction, EntityId, GridRect } from '@sim/core/types';
+import type { SimEvent } from '@sim/core/events';
+import type { SimState } from '@sim/core/state';
+import type { GridPos } from '@sim/core/types';
 import { warmGameTextures } from './sprites/game-textures';
 import { drawConveyorTile, drawMachineTile, drawSourceTile } from './sprites/shapes';
 import { CELL_SIZE, WorldRenderer } from './sync/world-renderer';

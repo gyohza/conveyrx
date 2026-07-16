@@ -4,9 +4,9 @@ import { StatusStripComponent } from './status-strip.component';
 import { BuildToolService } from '../../core/services/build-tool.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { UiStateService } from '../../core/services/ui-state.service';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
-import { FILTER_COST } from '../../../sim/content/economy';
-import type { MineSpec } from '../../../sim/core/entities';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
+import { FILTER_COST } from '@sim/content/economy';
+import type { MineSpec } from '@sim/core/entities';
 
 function placeMachine(engine: SimEngineService, kind: 'map' | 'filter' | 'take') {
   engine.state().economy.cash = 500;

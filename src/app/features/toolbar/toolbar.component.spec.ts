@@ -6,10 +6,10 @@ import { BuildToolService } from '../../core/services/build-tool.service';
 import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { SETUP_HALLMARK_ID } from '../../content/milestones';
-import { SOURCE_COST } from '../../../sim/content/economy';
-import { RECIPES } from '../../../sim/content/recipes';
-import { SOURCE_KINDS } from '../../../sim/content/source-kinds';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import { SOURCE_COST } from '@sim/content/economy';
+import { RECIPES } from '@sim/content/recipes';
+import { SOURCE_KINDS } from '@sim/content/source-kinds';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
 
 function pressKey(key: string): void {
   document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DIRECTIONS } from '../../sim/core/types';
-import type { GridRect } from '../../sim/core/types';
+import { DIRECTIONS } from '@sim/core/types';
+import type { GridRect } from '@sim/core/types';
 import {
   boundaryPinsForCell,
   generateBaseTraces,

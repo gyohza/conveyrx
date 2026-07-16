@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { RxSidebarComponent } from './rx-sidebar.component';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { UiStateService } from '../../core/services/ui-state.service';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
 
 describe('RxSidebarComponent', () => {
   beforeEach(() => {

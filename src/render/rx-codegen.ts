@@ -1,9 +1,9 @@
-import { MATERIALS } from '../sim/content/materials';
-import type { MaterialId } from '../sim/content/materials';
-import { RECIPES } from '../sim/content/recipes';
-import type { MachineEntity, SinkEntity, SourceEntity } from '../sim/core/entities';
-import { traceSourceChain } from '../sim/core/routing';
-import type { SimState } from '../sim/core/state';
+import { MATERIALS } from '@sim/content/materials';
+import type { MaterialId } from '@sim/content/materials';
+import { RECIPES } from '@sim/content/recipes';
+import type { MachineEntity, SinkEntity, SourceEntity } from '@sim/core/entities';
+import { traceSourceChain } from '@sim/core/routing';
+import type { SimState } from '@sim/core/state';
 
 const MATERIAL_EMOJI: Record<MaterialId, string> = {
   carbon: '⚫',

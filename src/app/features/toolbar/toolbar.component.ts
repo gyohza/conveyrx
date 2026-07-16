@@ -1,10 +1,10 @@
 import { Component, computed, inject } from '@angular/core';
-import { CONVEYOR_COST, SOURCE_COST, everAffordable } from '../../../sim/content/economy';
-import { MACHINE_DEFS } from '../../../sim/content/machine-defs';
-import { SOURCE_KINDS } from '../../../sim/content/source-kinds';
-import { buildCost } from '../../../sim/core/editing';
-import { findEntityAt } from '../../../sim/core/grid';
-import type { GridPos } from '../../../sim/core/types';
+import { CONVEYOR_COST, SOURCE_COST, everAffordable } from '@sim/content/economy';
+import { MACHINE_DEFS } from '@sim/content/machine-defs';
+import { SOURCE_KINDS } from '@sim/content/source-kinds';
+import { buildCost } from '@sim/core/editing';
+import { findEntityAt } from '@sim/core/grid';
+import type { GridPos } from '@sim/core/types';
 import { BuildToolService } from '../../core/services/build-tool.service';
 import type { ToolId } from '../../core/services/build-tool.service';
 import { OnboardingService } from '../../core/services/onboarding.service';

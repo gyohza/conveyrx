@@ -2,14 +2,14 @@ import { Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { describe, expect, it } from 'vitest';
 import type { GameTextures } from '../sprites/game-textures';
 import { CELL_SIZE, TICK_MS, WorldRenderer, cellCenter, craterField } from './world-renderer';
-import { STAGE1_MINES, createStage1State } from '../../sim/content/stage1-layout';
-import type { MineSpec } from '../../sim/core/entities';
-import { MATERIALS, countMaterials } from '../../sim/content/materials';
-import { place } from '../../sim/core/editing';
-import { toggleSubscribe } from '../../sim/core/subscription';
-import { addConveyor, addSource, emptyState } from '../../sim/testing/state-builder';
-import { directionToRadians } from '../../sim/core/types';
-import type { GridPos } from '../../sim/core/types';
+import { STAGE1_MINES, createStage1State } from '@sim/content/stage1-layout';
+import type { MineSpec } from '@sim/core/entities';
+import { MATERIALS, countMaterials } from '@sim/content/materials';
+import { place } from '@sim/core/editing';
+import { toggleSubscribe } from '@sim/core/subscription';
+import { addConveyor, addSource, emptyState } from '@sim/testing/state-builder';
+import { directionToRadians } from '@sim/core/types';
+import type { GridPos } from '@sim/core/types';
 
 function distinctTexture(): Texture {
   return new Texture({ source: Texture.EMPTY.source });

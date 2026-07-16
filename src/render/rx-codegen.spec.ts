@@ -13,8 +13,8 @@ import {
   addSink,
   addSource,
   emptyState,
-} from '../sim/testing/state-builder';
-import type { MaterialId } from '../sim/content/materials';
+} from '@sim/testing/state-builder';
+import type { MaterialId } from '@sim/content/materials';
 
 function carbons(n: number): MaterialId[] {
   return Array.from({ length: n }, () => 'carbon');

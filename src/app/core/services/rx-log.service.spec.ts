@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RxLogService } from './rx-log.service';
 import { SimEngineService } from './sim-engine.service';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
 
 function firstSourceId(engine: SimEngineService): number {
   return Object.keys(engine.state().sources).map(Number)[0];

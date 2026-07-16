@@ -1,4 +1,4 @@
-import type { SimState } from '../../../sim/core/state';
+import type { SimState } from '@sim/core/state';
 
 const SAVE_KEY = 'conveyrx.save.v1';
 const SAVE_VERSION = 2;

@@ -15,11 +15,11 @@ import { PixiAppFactory } from '../../core/services/pixi-app-factory.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { TileThumbnailService } from '../../core/services/tile-thumbnail.service';
 import { UiStateService } from '../../core/services/ui-state.service';
-import type { PixiGameApp } from '../../../render/pixi-app';
-import type { Preview } from '../../../render/sync/world-renderer';
-import { findEntityAt } from '../../../sim/core/grid';
-import { feederDirection, inferConveyorDirection } from '../../../sim/core/routing';
-import type { Direction, GridPos } from '../../../sim/core/types';
+import type { PixiGameApp } from '@render/pixi-app';
+import type { Preview } from '@render/sync/world-renderer';
+import { findEntityAt } from '@sim/core/grid';
+import { feederDirection, inferConveyorDirection } from '@sim/core/routing';
+import type { Direction, GridPos } from '@sim/core/types';
 
 @Component({
   selector: 'app-game-canvas',

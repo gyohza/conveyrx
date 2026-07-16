@@ -4,7 +4,7 @@ import { TopBarComponent } from './top-bar.component';
 import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { UiStateService } from '../../core/services/ui-state.service';
-import { START_CASH } from '../../../sim/content/economy';
+import { START_CASH } from '@sim/content/economy';
 
 function findButton(fixture: { nativeElement: HTMLElement }, text: string): HTMLButtonElement {
   const button = [...fixture.nativeElement.querySelectorAll('button')].find((b) =>

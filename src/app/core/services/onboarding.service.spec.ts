@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { OnboardingService } from './onboarding.service';
 import { BuildToolService } from './build-tool.service';
 import { SimEngineService } from './sim-engine.service';
-import { STAGE1_MINES, STAGE1_SINK_POS } from '../../../sim/content/stage1-layout';
+import { STAGE1_MINES, STAGE1_SINK_POS } from '@sim/content/stage1-layout';
 import { loadSeenIds } from './onboarding-save';
 
 /** Lays a straight run of pipes connecting the mine to the sink (same row on the stage1 map). */

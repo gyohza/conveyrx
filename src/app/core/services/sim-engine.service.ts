@@ -1,8 +1,8 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Subject } from 'rxjs';
-import { tick as tickSim } from '../../../sim/core/tick';
-import { stepBaseEdge } from '../../../sim/core/base';
-import type { BaseEdge } from '../../../sim/core/base';
+import { tick as tickSim } from '@sim/core/tick';
+import { stepBaseEdge } from '@sim/core/base';
+import type { BaseEdge } from '@sim/core/base';
 import {
   canPlace,
   clearAll,
@@ -10,22 +10,22 @@ import {
   place,
   reconfigureMachine,
   redirectConveyor,
-} from '../../../sim/core/editing';
+} from '@sim/core/editing';
 import type {
   BuildRequest,
   ConfigUpdate,
   EraseResult,
   PlaceResult,
   ReconfigureResult,
-} from '../../../sim/core/editing';
-import { findEntityAt } from '../../../sim/core/grid';
-import type { SimEvent } from '../../../sim/core/events';
-import type { SimState } from '../../../sim/core/state';
-import type { Direction, EntityId, GridPos } from '../../../sim/core/types';
-import { setSourceKind, toggleSubscribe } from '../../../sim/core/subscription';
-import type { SetSourceKindResult } from '../../../sim/core/subscription';
-import type { SourceKind } from '../../../sim/content/source-kinds';
-import { createStage1State } from '../../../sim/content/stage1-layout';
+} from '@sim/core/editing';
+import { findEntityAt } from '@sim/core/grid';
+import type { SimEvent } from '@sim/core/events';
+import type { SimState } from '@sim/core/state';
+import type { Direction, EntityId, GridPos } from '@sim/core/types';
+import { setSourceKind, toggleSubscribe } from '@sim/core/subscription';
+import type { SetSourceKindResult } from '@sim/core/subscription';
+import type { SourceKind } from '@sim/content/source-kinds';
+import { createStage1State } from '@sim/content/stage1-layout';
 import { loadGame, saveGame } from './game-save';
 
 export interface SourceSubscriptionChange {

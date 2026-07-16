@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SimEngineService } from './sim-engine.service';
-import { CONVEYOR_COST, START_CASH } from '../../../sim/content/economy';
-import { RECIPES } from '../../../sim/content/recipes';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import { CONVEYOR_COST, START_CASH } from '@sim/content/economy';
+import { RECIPES } from '@sim/content/recipes';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
 
 const CONVEYOR_EAST = { type: 'conveyor', direction: 'east' } as const;
 const MAP = { type: 'machine', kind: 'map', recipeId: 'crystallize' } as const;

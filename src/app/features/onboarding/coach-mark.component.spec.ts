@@ -5,7 +5,7 @@ import { BuildToolService } from '../../core/services/build-tool.service';
 import { GameViewportService } from '../../core/services/game-viewport.service';
 import { OnboardingService } from '../../core/services/onboarding.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
 
 describe('CoachMarkComponent', () => {
   beforeEach(() => {

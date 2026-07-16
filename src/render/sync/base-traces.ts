@@ -1,5 +1,5 @@
-import { DIRECTIONS } from '../../sim/core/types';
-import type { Direction, GridPos, GridRect } from '../../sim/core/types';
+import { DIRECTIONS } from '@sim/core/types';
+import type { Direction, GridPos, GridRect } from '@sim/core/types';
 
 /** Cell-local resolution the trace routing snaps to; 4 sub-units per grid cell. */
 export const TRACE_SUBDIVISIONS = 4;

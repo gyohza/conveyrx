@@ -8,10 +8,10 @@ import { PixiAppFactory } from '../../core/services/pixi-app-factory.service';
 import { SimEngineService } from '../../core/services/sim-engine.service';
 import { TileThumbnailService } from '../../core/services/tile-thumbnail.service';
 import { UiStateService } from '../../core/services/ui-state.service';
-import type { InteractionHandlers } from '../../../render/pixi-app';
+import type { InteractionHandlers } from '@render/pixi-app';
 import { SETUP_HALLMARK_ID } from '../../content/milestones';
-import { SOURCE_COST } from '../../../sim/content/economy';
-import { STAGE1_MINES } from '../../../sim/content/stage1-layout';
+import { SOURCE_COST } from '@sim/content/economy';
+import { STAGE1_MINES } from '@sim/content/stage1-layout';
 
 /** Fast-forwards past the scripted onboarding arc, as if the player had already completed it. */
 function completeOnboardingSetup(): void {

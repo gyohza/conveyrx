@@ -1,21 +1,16 @@
 import { Container, Graphics, Sprite, Text } from 'pixi.js';
-import { MACHINE_DEFS } from '../../sim/content/machine-defs';
-import { MATERIALS, countMaterials } from '../../sim/content/materials';
-import type { MaterialId } from '../../sim/content/materials';
-import { RECIPES } from '../../sim/content/recipes';
-import { TICK_MS } from '../../sim/content/timing';
-import type { MachineEntity, MachineKind, SourceEntity } from '../../sim/core/entities';
-import type { SimEvent } from '../../sim/core/events';
-import { findEntityAt } from '../../sim/core/grid';
-import {
-  conveyorLanes,
-  isBasePowered,
-  machinePorts,
-  poweredConveyors,
-} from '../../sim/core/routing';
-import type { SimState } from '../../sim/core/state';
-import { directionToRadians } from '../../sim/core/types';
-import type { Direction, EntityId, GridPos, GridRect, PacketId } from '../../sim/core/types';
+import { MACHINE_DEFS } from '@sim/content/machine-defs';
+import { MATERIALS, countMaterials } from '@sim/content/materials';
+import type { MaterialId } from '@sim/content/materials';
+import { RECIPES } from '@sim/content/recipes';
+import { TICK_MS } from '@sim/content/timing';
+import type { MachineEntity, MachineKind, SourceEntity } from '@sim/core/entities';
+import type { SimEvent } from '@sim/core/events';
+import { findEntityAt } from '@sim/core/grid';
+import { conveyorLanes, isBasePowered, machinePorts, poweredConveyors } from '@sim/core/routing';
+import type { SimState } from '@sim/core/state';
+import { directionToRadians } from '@sim/core/types';
+import type { Direction, EntityId, GridPos, GridRect, PacketId } from '@sim/core/types';
 import type { GameTextures } from '../sprites/game-textures';
 import { CELL_SIZE } from '../sprites/shapes';
 import { generateBaseTraces, TRACE_SUBDIVISIONS } from './base-traces';

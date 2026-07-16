@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
-import type { BuildRequest } from '../../../sim/core/editing';
-import type { GridPos } from '../../../sim/core/types';
+import type { BuildRequest } from '@sim/core/editing';
+import type { GridPos } from '@sim/core/types';
 
 export type ToolId = 'conveyor' | 'map' | 'filter' | 'take' | 'source' | 'erase';
 

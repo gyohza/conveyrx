@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import type { GridPos } from '../../../sim/core/types';
+import type { GridPos } from '@sim/core/types';
 
 @Injectable({ providedIn: 'root' })
 export class UiStateService {

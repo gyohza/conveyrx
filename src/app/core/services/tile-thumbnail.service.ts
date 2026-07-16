@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import type { MachineKind } from '../../../sim/core/entities';
+import type { MachineKind } from '@sim/core/entities';
 
 export type ThumbnailKey = MachineKind | 'conveyor' | 'source';
 

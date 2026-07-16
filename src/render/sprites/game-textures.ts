@@ -1,5 +1,5 @@
 import type { Graphics, Renderer, Texture } from 'pixi.js';
-import type { MachineKind } from '../../sim/core/entities';
+import type { MachineKind } from '@sim/core/entities';
 import { bakeTexture } from './bake';
 import {
   drawCellHighlight,

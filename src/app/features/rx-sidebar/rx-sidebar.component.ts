@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { tokenizeCode } from '../../../render/ts-highlight';
-import type { CodeTokenKind } from '../../../render/ts-highlight';
+import { tokenizeCode } from '@render/ts-highlight';
+import type { CodeTokenKind } from '@render/ts-highlight';
 import { RxLogService } from '../../core/services/rx-log.service';
 import { UiStateService } from '../../core/services/ui-state.service';
 

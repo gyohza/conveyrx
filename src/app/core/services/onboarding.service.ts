@@ -8,8 +8,8 @@ import {
   isMilestoneComplete,
 } from '../../content/milestones';
 import type { MilestoneContext, MilestoneDef } from '../../content/milestones';
-import { isSourceConnectedToBase } from '../../../sim/core/routing';
-import type { EntityId, GridPos } from '../../../sim/core/types';
+import { isSourceConnectedToBase } from '@sim/core/routing';
+import type { EntityId, GridPos } from '@sim/core/types';
 import { clearSeenIds, loadSeenIds, saveSeenIds } from './onboarding-save';
 import { BuildToolService } from './build-tool.service';
 import { SimEngineService } from './sim-engine.service';

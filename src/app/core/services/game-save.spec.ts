@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { clearSavedGame, loadGame, saveGame } from './game-save';
-import { createStage1State } from '../../../sim/content/stage1-layout';
+import { createStage1State } from '@sim/content/stage1-layout';
 
 describe('game-save', () => {
   beforeEach(() => {

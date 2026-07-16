@@ -1,5 +1,5 @@
 import { Graphics } from 'pixi.js';
-import type { MachineKind } from '../../sim/core/entities';
+import type { MachineKind } from '@sim/core/entities';
 
 export const CELL_SIZE = 48;
 

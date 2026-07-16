@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Subscription, interval } from 'rxjs';
-import { TICK_MS } from '../../../sim/content/timing';
+import { TICK_MS } from '@sim/content/timing';
 import { SimEngineService } from './sim-engine.service';
 
 export const TICK_INTERVAL_MS = TICK_MS;

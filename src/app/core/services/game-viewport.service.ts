@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import type { PixiGameApp } from '../../../render/pixi-app';
-import type { GridPos } from '../../../sim/core/types';
+import type { PixiGameApp } from '@render/pixi-app';
+import type { GridPos } from '@sim/core/types';
 
 @Injectable({ providedIn: 'root' })
 export class GameViewportService {

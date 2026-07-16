@@ -5,8 +5,8 @@ import {
   subVarName,
   subscribeStatement,
   unsubscribeStatement,
-} from '../../../render/rx-codegen';
-import type { EntityId } from '../../../sim/core/types';
+} from '@render/rx-codegen';
+import type { EntityId } from '@sim/core/types';
 import { SimEngineService } from './sim-engine.service';
 
 @Injectable({ providedIn: 'root' })
