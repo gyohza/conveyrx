@@ -110,7 +110,7 @@ describe('WorldRenderer', () => {
       const sink = Object.values(state.sinks)[0];
       const row = sink.position.y - base.min.y;
       const col = sink.position.x - base.min.x;
-      expect(row * width + col + 1).toBe(4); // its own computed slot in the clipped 2x3 base
+      expect(row * width + col + 1).toBe(5); // dead center of the default 3x3 base
     });
 
     it('shows a lettered packet icon and count for each material a mine yields', () => {
