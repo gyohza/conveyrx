@@ -8,6 +8,7 @@ import {
   isMilestoneComplete,
 } from '../../content/milestones';
 import type { MilestoneContext, MilestoneDef } from '../../content/milestones';
+import { isInsideBase } from '@sim/core/base';
 import { isSourceConnectedToBase } from '@sim/core/routing';
 import type { EntityId, GridPos } from '@sim/core/types';
 import { clearSeenIds, loadSeenIds, saveSeenIds } from './onboarding-save';
@@ -91,6 +92,10 @@ export class OnboardingService {
       return true;
     }
     if (milestone.anchor.kind === 'dom') return false;
+    if (milestone.anchor.kind === 'gridRect') {
+      const rect = milestone.anchor.rect(this.context());
+      return rect !== null && isInsideBase(rect, pos);
+    }
     const target = milestone.anchor.pos(this.context());
     return target !== null && target.x === pos.x && target.y === pos.y;
   }

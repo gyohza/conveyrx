@@ -30,4 +30,24 @@ describe('GameViewportService', () => {
 
     expect(viewport.gridCellRect({ x: 0, y: 0 })).toBeNull();
   });
+
+  it('computes a bounding rect spanning the corner cells of a grid rect', () => {
+    const app = {
+      gridCellRect: vi.fn((pos: { x: number; y: number }) =>
+        pos.x === 1 && pos.y === 1 ? new DOMRect(10, 10, 20, 20) : new DOMRect(50, 50, 20, 20),
+      ),
+    } as unknown as PixiGameApp;
+    const viewport = TestBed.inject(GameViewportService);
+    viewport.register(app);
+
+    const rect = viewport.gridRect({ min: { x: 1, y: 1 }, max: { x: 2, y: 2 } });
+
+    expect(rect).toEqual(new DOMRect(10, 10, 60, 60));
+  });
+
+  it('returns null for gridRect when no app is registered', () => {
+    const viewport = TestBed.inject(GameViewportService);
+
+    expect(viewport.gridRect({ min: { x: 0, y: 0 }, max: { x: 1, y: 1 } })).toBeNull();
+  });
 });

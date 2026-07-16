@@ -1,7 +1,7 @@
 import { buildCost } from '@sim/core/editing';
 import { isSourceConnectedToBase } from '@sim/core/routing';
 import type { SimState } from '@sim/core/state';
-import type { GridPos } from '@sim/core/types';
+import type { GridPos, GridRect } from '@sim/core/types';
 import { everAffordable } from '@sim/content/economy';
 import type { ToolId } from '../core/services/build-tool.service';
 
@@ -14,6 +14,7 @@ export interface MilestoneContext {
 export type MilestoneAnchor =
   | { kind: 'dom'; selector: string }
   | { kind: 'grid'; pos: (ctx: MilestoneContext) => GridPos | null }
+  | { kind: 'gridRect'; rect: (ctx: MilestoneContext) => GridRect | null }
   | { kind: 'none' };
 
 export interface MilestoneDef {
@@ -59,11 +60,7 @@ function sourceAnchor(): MilestoneAnchor {
 }
 
 function subscriberAnchor(): MilestoneAnchor {
-  return {
-    kind: 'grid',
-    pos: ({ state }) =>
-      Object.values(state.sinks).find((sink) => sink.sinkType === 'cash')?.position ?? null,
-  };
+  return { kind: 'gridRect', rect: ({ state }) => state.base };
 }
 
 const cashReadoutAnchor = domAnchor('[data-coachmark="cash-readout"]');

@@ -96,6 +96,10 @@ export class CoachMarkComponent {
     if (anchor.kind === 'dom') {
       return document.querySelector(anchor.selector)?.getBoundingClientRect() ?? null;
     }
+    if (anchor.kind === 'gridRect') {
+      const rect = anchor.rect(this.onboarding.context());
+      return rect ? this.viewport.gridRect(rect) : null;
+    }
     const pos = anchor.pos(this.onboarding.context());
     return pos ? this.viewport.gridCellRect(pos) : null;
   }
