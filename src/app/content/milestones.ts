@@ -145,6 +145,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     body: 'Packets are moving now — watch a few make the trip from source to Subscriber.',
     isTriggered: () => true,
     anchor: sourceAnchor(),
+    spotlight: false,
   },
   {
     id: 'first-cash',

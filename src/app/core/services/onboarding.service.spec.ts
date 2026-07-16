@@ -93,6 +93,16 @@ describe('OnboardingService', () => {
     expect(onboarding.isSetupComplete()).toBe(true);
   });
 
+  it('does not darken the path so the player can actually watch packets flow', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    expect(onboarding.active()?.id).toBe('flowing');
+
+    expect(onboarding.isMapInteractionAllowed({ x: 0, y: 0 })).toBe(true);
+    expect(onboarding.isMapInteractionAllowed(STAGE1_SINK_POS)).toBe(true);
+  });
+
   it('shows first-cash once a sale happens, then source-exhausted once the batch runs dry', () => {
     runUpToSubscribing();
     subscribeSource();
