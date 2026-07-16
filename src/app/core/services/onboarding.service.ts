@@ -45,6 +45,17 @@ export class OnboardingService {
   /** True once the scripted setup arc (pick tool -> place -> pipe -> connect -> subscribe) is done. */
   readonly isSetupComplete = computed(() => this.seenSignal().has(SETUP_HALLMARK_ID));
 
+  /**
+   * Nothing should tick underneath a coach-mark the player is meant to read, act on, or has just
+   * dismissed — except the handful of milestones whose whole lesson is watching something change
+   * in real time (`pausesSim: false`), where freezing would hide the exact thing being taught.
+   */
+  readonly shouldPauseSim = computed(() => {
+    if (!this.isSetupComplete()) return true;
+    const milestone = this.active();
+    return milestone !== null && milestone.pausesSim !== false;
+  });
+
   readonly log = computed<LoggedMilestone[]>(() => {
     const ctx = this.context();
     const seen = this.seenSignal();

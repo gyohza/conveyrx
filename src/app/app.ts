@@ -32,7 +32,7 @@ export class App implements OnInit {
   protected readonly ui = inject(UiStateService);
 
   constructor() {
-    effect(() => this.clock.paused.set(!this.onboarding.isSetupComplete()));
+    effect(() => this.clock.paused.set(this.onboarding.shouldPauseSim()));
   }
 
   ngOnInit(): void {

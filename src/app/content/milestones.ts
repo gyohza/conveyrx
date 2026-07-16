@@ -48,6 +48,12 @@ export interface MilestoneDef {
   spotlight?: boolean;
   /** Shown as an external reference link on a splash-style ({ anchor: { kind: 'none' } }) milestone. */
   link?: { label: string; url: string };
+  /**
+   * Set to `false` for a step whose whole lesson is watching something change in real time (packets
+   * moving, cash draining) — the sim clock keeps ticking underneath it instead of freezing, same as
+   * every other active milestone. Defaults to `true`.
+   */
+  pausesSim?: boolean;
 }
 
 function domAnchor(selector: string): MilestoneAnchor {
@@ -149,6 +155,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     isTriggered: () => true,
     anchor: sourceAnchor(),
     spotlight: false,
+    pausesSim: false,
   },
   {
     id: 'first-cash',
@@ -163,6 +170,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     body: "Your source just emitted its last item — but it's still subscribed, and upkeep never stops. Watch the balance.",
     isTriggered: ({ state }) => hasDrainingExhaustedSource(state),
     anchor: cashReadoutAnchor,
+    pausesSim: false,
   },
   {
     id: 'force-unsubscribe',
@@ -172,6 +180,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     anchor: sourceAnchor(),
     autoCompleteWhen: ({ state, hasLeakedBefore }) =>
       hasLeakedBefore && !hasDrainingExhaustedSource(state),
+    pausesSim: false,
   },
   {
     id: 'unsubscribe-hallmark',

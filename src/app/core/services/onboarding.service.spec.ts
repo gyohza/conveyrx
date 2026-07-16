@@ -93,6 +93,57 @@ describe('OnboardingService', () => {
     expect(onboarding.isSetupComplete()).toBe(true);
   });
 
+  it('keeps the sim paused for the entire scripted setup arc', () => {
+    const onboarding = TestBed.inject(OnboardingService);
+    expect(onboarding.shouldPauseSim()).toBe(true);
+  });
+
+  it('unpauses the sim once no milestone is active, post-setup', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    onboarding.dismiss('flowing');
+
+    expect(onboarding.active()).toBeNull();
+    expect(onboarding.shouldPauseSim()).toBe(false);
+  });
+
+  it('pauses the sim for a default, read-and-dismiss milestone even after setup', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const engine = TestBed.inject(SimEngineService);
+    onboarding.dismiss('flowing');
+    engine.state().economy.saleCount += 1;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 0 });
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).toBe('first-cash');
+    expect(onboarding.shouldPauseSim()).toBe(true);
+  });
+
+  it('does not pause the sim for "flowing", "source-exhausted", or "force-unsubscribe"', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const engine = TestBed.inject(SimEngineService);
+
+    expect(onboarding.active()?.id).toBe('flowing');
+    expect(onboarding.shouldPauseSim()).toBe(false);
+
+    onboarding.dismiss('flowing');
+    const sourceId = Object.values(engine.state().sources)[0].id;
+    engine.state().sources[sourceId].cursor = engine.state().sources[sourceId].sequence.length;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 1 });
+    TestBed.flushEffects();
+    expect(onboarding.active()?.id).toBe('source-exhausted');
+    expect(onboarding.shouldPauseSim()).toBe(false);
+
+    onboarding.dismiss('source-exhausted');
+    expect(onboarding.active()?.id).toBe('force-unsubscribe');
+    expect(onboarding.shouldPauseSim()).toBe(false);
+  });
+
   it('does not darken the path so the player can actually watch packets flow', () => {
     runUpToSubscribing();
     subscribeSource();
