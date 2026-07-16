@@ -25,11 +25,13 @@ export class OnboardingService {
   private readonly tools = inject(BuildToolService);
   private readonly seenSignal = signal<Set<string>>(loadSeenIds());
   private readonly hasLeaked = signal(false);
+  private readonly hasUnsubscribedOnce = signal(false);
 
   readonly context = computed<MilestoneContext>(() => ({
     state: this.engine.state(),
     tool: this.tools.tool(),
     hasLeakedBefore: this.hasLeaked(),
+    hasUnsubscribedOnce: this.hasUnsubscribedOnce(),
   }));
 
   private readonly pending = computed<MilestoneDef[]>(() => {
@@ -55,6 +57,9 @@ export class OnboardingService {
   constructor() {
     effect(() => {
       if (hasDrainingExhaustedSource(this.engine.state())) this.hasLeaked.set(true);
+    });
+    this.engine.sourceSubscriptionChanged.subscribe(({ subscribed }) => {
+      if (!subscribed) this.hasUnsubscribedOnce.set(true);
     });
     effect(() => {
       const ctx = this.context();

@@ -31,6 +31,18 @@ describe('GameViewportService', () => {
     expect(viewport.gridCellRect({ x: 0, y: 0 })).toBeNull();
   });
 
+  it('is not ready until an app registers, then not ready again once cleared', () => {
+    const app = { gridCellRect: vi.fn() } as unknown as PixiGameApp;
+    const viewport = TestBed.inject(GameViewportService);
+    expect(viewport.ready()).toBe(false);
+
+    viewport.register(app);
+    expect(viewport.ready()).toBe(true);
+
+    viewport.clear();
+    expect(viewport.ready()).toBe(false);
+  });
+
   it('computes a bounding rect spanning the corner cells of a grid rect', () => {
     const app = {
       gridCellRect: vi.fn((pos: { x: number; y: number }) =>

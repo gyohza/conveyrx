@@ -9,6 +9,7 @@ export interface MilestoneContext {
   state: SimState;
   tool: ToolId | null;
   hasLeakedBefore: boolean;
+  hasUnsubscribedOnce: boolean;
 }
 
 export type MilestoneAnchor =
@@ -45,6 +46,8 @@ export interface MilestoneDef {
    * the anchor's single cell. Defaults to `true`.
    */
   spotlight?: boolean;
+  /** Shown as an external reference link on a splash-style ({ anchor: { kind: 'none' } }) milestone. */
+  link?: { label: string; url: string };
 }
 
 function domAnchor(selector: string): MilestoneAnchor {
@@ -87,7 +90,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     title: 'Welcome',
     body: "You're running an automated extraction rig — packets of raw material will flow through it exactly the way values flow through an RxJS stream.",
     isTriggered: () => true,
-    anchor: mineAnchor(),
+    anchor: { kind: 'none' },
   },
   {
     id: 'select-source-tool',
@@ -171,6 +174,14 @@ export const MILESTONES: readonly MilestoneDef[] = [
       hasLeakedBefore && !hasDrainingExhaustedSource(state),
   },
   {
+    id: 'unsubscribe-hallmark',
+    title: 'Nicely done — you just unsubscribed',
+    body: 'Calling **unsubscribe()** tears down a subscription and frees whatever it was holding onto — skipping it is exactly how memory leaks happen in real apps. You can subscribe to the same source again any time; it replays the same sequence from the start.',
+    isTriggered: ({ hasUnsubscribedOnce }) => hasUnsubscribedOnce,
+    anchor: { kind: 'none' },
+    link: { label: 'Why unsubscribing matters', url: 'https://rxjs.dev/guide/subscription' },
+  },
+  {
     id: 'map-unlocked',
     title: 'Try an operator',
     body: 'You can afford map now — select it to transform packets mid-flight.',
@@ -186,6 +197,13 @@ export const MILESTONES: readonly MilestoneDef[] = [
     isTriggered: ({ tool }) => tool === 'map',
     anchor: { kind: 'none' },
     autoCompleteWhen: ({ state }) => Object.values(state.machines).some((m) => m.kind === 'map'),
+  },
+  {
+    id: 'operator-hallmark',
+    title: 'Your first operator',
+    body: '**map** is your first RxJS operator — code that sits between a source and a subscriber, transforming each value as it passes through. Every operator you unlock works the same way: drop it onto a pipe, and it runs on every packet that flows past.',
+    isTriggered: ({ state }) => Object.values(state.machines).some((m) => m.kind === 'map'),
+    anchor: { kind: 'none' },
   },
   {
     id: 'filter-placed',
