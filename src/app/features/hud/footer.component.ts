@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
-import { version } from '../../../../package.json';
+
+declare const APP_VERSION: string | undefined;
+
+/** Substituted at build time via `--define` (see the `start`/`build` scripts in package.json). */
+export const resolvedVersion = typeof APP_VERSION === 'string' ? APP_VERSION : '0.0.0-dev';
 
 export function isBetaVersion(version: string): boolean {
   return version.split('.')[0] === '0';
@@ -16,6 +20,6 @@ export function isBetaVersion(version: string): boolean {
   `,
 })
 export class FooterComponent {
-  protected readonly version = version;
-  protected readonly isBeta = isBetaVersion(version);
+  protected readonly version = resolvedVersion;
+  protected readonly isBeta = isBetaVersion(resolvedVersion);
 }

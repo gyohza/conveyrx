@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
-import { FooterComponent, isBetaVersion } from './footer.component';
-import { version } from '../../../../package.json';
+import { FooterComponent, isBetaVersion, resolvedVersion } from './footer.component';
 
 describe('isBetaVersion', () => {
   it('treats a 0.x version as beta', () => {
@@ -14,11 +13,11 @@ describe('isBetaVersion', () => {
 });
 
 describe('FooterComponent', () => {
-  it('shows the current package version', () => {
+  it('shows the resolved version', () => {
     const fixture = TestBed.createComponent(FooterComponent);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain(version);
+    expect(fixture.nativeElement.textContent).toContain(resolvedVersion);
   });
 
   it('labels a beta version explicitly', () => {

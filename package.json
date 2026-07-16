@@ -5,9 +5,9 @@
   "scripts": {
     "preinstall": "npx only-allow yarn",
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "start": "ng serve --define=\"APP_VERSION='$npm_package_version'\"",
+    "build": "ng build --define=\"APP_VERSION='$npm_package_version'\"",
+    "watch": "ng build --watch --configuration development --define=\"APP_VERSION='$npm_package_version'\"",
     "test": "ng test",
     "test:ci": "ng test --configuration=ci",
     "lint": "ng lint",
