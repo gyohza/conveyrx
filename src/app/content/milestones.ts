@@ -238,8 +238,10 @@ export function isGroupHallmark(id: string): boolean {
 
 /**
  * True once a milestone's own `autoCompleteWhen` is satisfied, OR — for an `ephemeral` grouped
- * step only — once any *later* step in the same group is satisfied (see `ephemeral`'s doc comment
- * for why non-ephemeral steps must never be skipped this way).
+ * step only — once a *later, non-ephemeral* step in the same group is satisfied (see `ephemeral`'s
+ * doc comment for why non-ephemeral steps must never be skipped this way). A later *ephemeral*
+ * step doesn't count: two ephemeral steps typically each gate on a different, mutually exclusive
+ * tool selection, so one being satisfied says nothing about whether this one ever was.
  */
 export function isMilestoneComplete(milestone: MilestoneDef, ctx: MilestoneContext): boolean {
   if (milestone.autoCompleteWhen?.(ctx)) return true;
@@ -248,6 +250,6 @@ export function isMilestoneComplete(milestone: MilestoneDef, ctx: MilestoneConte
   if (!group) return false;
   return group.slice(group.indexOf(milestone.id) + 1).some((laterId) => {
     const later = MILESTONES.find((m) => m.id === laterId);
-    return later?.autoCompleteWhen?.(ctx) ?? false;
+    return !later?.ephemeral && (later?.autoCompleteWhen?.(ctx) ?? false);
   });
 }

@@ -49,6 +49,17 @@ describe('OnboardingService', () => {
     expect(onboarding.active()?.id).toBe('welcome');
   });
 
+  it('does not skip "pick your source" just because the player tried the pipe tool first', () => {
+    const onboarding = TestBed.inject(OnboardingService);
+    const tools = TestBed.inject(BuildToolService);
+    onboarding.dismiss('welcome');
+
+    tools.select('conveyor');
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).toBe('select-source-tool');
+  });
+
   it('walks the full scripted setup arc in order, with no manual dismiss for action steps', () => {
     const onboarding = TestBed.inject(OnboardingService);
     const tools = TestBed.inject(BuildToolService);
