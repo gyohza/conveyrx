@@ -182,37 +182,36 @@ describe('OnboardingService', () => {
     expect(loadSeenIds().has('map-placed-on-pipe')).toBe(true);
   });
 
-  it('does not let "drop it on a pipe" jump ahead of "try an operator" when a source gets resubscribed', () => {
+  it('suggests map as soon as it is affordable, even while a source is still actively subscribed', () => {
     runUpToSubscribing();
     subscribeSource();
     const onboarding = TestBed.inject(OnboardingService);
     const engine = TestBed.inject(SimEngineService);
     onboarding.dismiss('flowing');
-    const sourceId = Object.values(engine.state().sources)[0].id;
 
-    engine.toggleSubscribe(sourceId);
+    engine.state().economy.cash = 500;
+    engine.state().economy.peakCash = 500;
+    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
+    TestBed.flushEffects();
+
+    expect(onboarding.active()?.id).toBe('map-unlocked');
+  });
+
+  it('stops pointing at map once cash drops back below its cost, even if peak cash once reached it', () => {
+    runUpToSubscribing();
+    subscribeSource();
+    const onboarding = TestBed.inject(OnboardingService);
+    const engine = TestBed.inject(SimEngineService);
+    onboarding.dismiss('flowing');
+
     engine.state().economy.cash = 500;
     engine.state().economy.peakCash = 500;
     engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
     TestBed.flushEffects();
     expect(onboarding.active()?.id).toBe('map-unlocked');
 
-    engine.toggleSubscribe(sourceId);
-    TestBed.flushEffects();
-
-    expect(onboarding.active()?.id).not.toBe('map-placed-on-pipe');
-  });
-
-  it('does not suggest map while a source is still actively subscribed', () => {
-    runUpToSubscribing();
-    subscribeSource();
-    const onboarding = TestBed.inject(OnboardingService);
-    const engine = TestBed.inject(SimEngineService);
-    onboarding.dismiss('flowing');
-
-    engine.state().economy.cash = 500;
-    engine.state().economy.peakCash = 500;
-    engine.place({ type: 'conveyor', direction: 'east' }, { x: 0, y: 2 });
+    engine.state().economy.cash = 0;
+    engine.tick();
     TestBed.flushEffects();
 
     expect(onboarding.active()?.id).not.toBe('map-unlocked');

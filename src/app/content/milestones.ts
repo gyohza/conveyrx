@@ -174,9 +174,7 @@ export const MILESTONES: readonly MilestoneDef[] = [
     id: 'map-unlocked',
     title: 'Try an operator',
     body: 'You can afford map now — select it to transform packets mid-flight.',
-    isTriggered: ({ state }) =>
-      !anySourceSubscribed(state) &&
-      everAffordable(state.economy.peakCash, buildCost({ type: 'machine', kind: 'map' })),
+    isTriggered: ({ state }) => state.economy.cash >= buildCost({ type: 'machine', kind: 'map' }),
     anchor: domAnchor('[data-coachmark="tool-map"]'),
     autoCompleteWhen: ({ tool }) => tool === 'map',
     ephemeral: true,
