@@ -32,7 +32,8 @@ export type PlaceResult =
         | 'inside-base'
         | 'base-buffer-restricted'
         | 'base-entry-taken'
-        | 'requires-pipe';
+        | 'requires-pipe'
+        | 'mine-reserved';
     };
 
 export type ConfigUpdate =
@@ -130,6 +131,8 @@ export function canPlace(state: SimState, request: BuildRequest, pos: GridPos): 
     if (occupant.kind !== 'conveyor') return { ok: false, reason: 'occupied' };
   } else if (occupant) {
     return { ok: false, reason: 'occupied' };
+  } else if (request.type === 'conveyor' && findMine(state, pos)) {
+    return { ok: false, reason: 'mine-reserved' };
   }
   if (request.type === 'source' && !findMine(state, pos)) {
     return { ok: false, reason: 'not-a-mine' };

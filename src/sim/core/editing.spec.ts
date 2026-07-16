@@ -86,6 +86,22 @@ describe('grid editing', () => {
       });
     });
 
+    it('rejects a conveyor on an unbuilt mine tile — only a source can go there', () => {
+      const state = createStage1State();
+
+      expect(place(state, CONVEYOR_EAST, STAGE1_MINES[0].position)).toEqual({
+        ok: false,
+        reason: 'mine-reserved',
+      });
+    });
+
+    it('still allows a source on the mine tile once a conveyor has been rejected there', () => {
+      const state = createStage1State();
+      state.economy.cash = 100;
+
+      expect(place(state, SOURCE, STAGE1_MINES[0].position)).toEqual({ ok: true });
+    });
+
     it('rejects placement the player cannot afford, leaving cash untouched', () => {
       const state = createStage1State();
       place(state, CONVEYOR_EAST, CENTER);
@@ -262,13 +278,13 @@ describe('grid editing', () => {
     it('does not replace a conveyor when placing a conveyor or a source', () => {
       const state = createStage1State();
       state.economy.cash = 100;
-      place(state, CONVEYOR_EAST, STAGE1_MINES[0].position);
+      place(state, CONVEYOR_EAST, SIMPLE);
 
-      expect(place(state, CONVEYOR_WEST, STAGE1_MINES[0].position)).toEqual({
+      expect(place(state, CONVEYOR_WEST, SIMPLE)).toEqual({
         ok: false,
         reason: 'occupied',
       });
-      expect(place(state, SOURCE, STAGE1_MINES[0].position)).toEqual({
+      expect(place(state, SOURCE, SIMPLE)).toEqual({
         ok: false,
         reason: 'occupied',
       });
